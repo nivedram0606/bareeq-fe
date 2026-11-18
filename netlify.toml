@@ -1,0 +1,9 @@
+# Netlify: Bareeq Cloud Web Frontend
+# Set VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY and VITE_API_URL
+# in Site configuration -> Environment variables.
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
