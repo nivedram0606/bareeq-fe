@@ -5,8 +5,7 @@ existing Supabase database used as plain Postgres), API on **Render** (Docker, `
 app on **Netlify** (`netlify.toml`). Sign-in is username + password, handled entirely by the API;
 no third-party auth service is needed.
 
-> `DEPLOYMENT.md` still describes the earlier Supabase Auth/Storage setup in places. Where it
-> disagrees with this page, this page wins.
+> For the full guide (other hosts, backups, upgrades, security) see `DEPLOYMENT.md`.
 
 ## 1. PostgreSQL (database)
 
