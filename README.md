@@ -21,9 +21,10 @@ cp .env.example .env
 
 | Variable | Description | Example |
 | :--- | :--- | :--- |
-| `VITE_API_URL` | Base URL of the Bareeq API backend | `http://127.0.0.1:4000` |
-| `VITE_SUPABASE_URL` | Supabase project URL (Auth only) | `https://xyzcompany.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Supabase publishable anon key | `eyJhbGciOi...` |
+| `VITE_API_URL` | Base URL of the Bareeq API backend | `http://localhost:4000/api/v1` |
+
+Sign-in is username + password against the API (`POST /auth/login`); the session token is kept in
+`localStorage` and sent as a bearer token. There is no other auth service to configure.
 
 ### Development
 ```bash

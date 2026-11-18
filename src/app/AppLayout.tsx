@@ -1,7 +1,7 @@
-import { LogOut, Menu, UserCircle } from 'lucide-react';
+import { KeyRound, LogOut, Menu, UserCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { hasRole } from '@bareeq/shared';
 
@@ -18,6 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/misc';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { schoolName, useOrg } from '@/features/settings/api';
+import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor } from '@/lib/brand';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth.store';
@@ -34,7 +35,11 @@ function SchoolIdentity() {
   return (
     <div className="flex min-w-0 items-center gap-3">
       {org.logoUrl ? (
-        <img src={org.logoUrl} alt="" className="size-9 shrink-0 rounded-md object-contain" />
+        <img
+          src={apiAssetUrl(org.logoUrl)}
+          alt=""
+          className="size-9 shrink-0 rounded-md object-contain"
+        />
       ) : (
         <span
           aria-hidden="true"
@@ -96,6 +101,7 @@ function UserMenu() {
   const { t } = useTranslation();
   const profile = useAuthStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
+  const navigate = useNavigate();
   if (!profile) return null;
   return (
     <DropdownMenu>
@@ -108,14 +114,18 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
           <span className="truncate">{profile.fullName}</span>
-          <span className="truncate text-xs font-normal text-muted-foreground">
-            {profile.email}
+          <span className="truncate text-xs font-normal text-muted-foreground" dir="ltr">
+            {profile.username}
           </span>
           <span className="text-xs font-normal text-muted-foreground">
             {t(`roles.${profile.role}`)}
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => void navigate('/account/password')}>
+          <KeyRound aria-hidden="true" />
+          {t('header.changePassword')}
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void signOut()}>
           <LogOut aria-hidden="true" className="rtl:rotate-180" />
           {t('header.signOut')}

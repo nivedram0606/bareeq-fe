@@ -18,6 +18,7 @@ export const V = {
   invalidSort: 'validation.invalid_sort',
   discountTooLarge: 'validation.discount_too_large',
   passwordShort: 'validation.password_short',
+  invalidUsername: 'validation.invalid_username',
 } as const;
 
 export const uuidSchema = z.uuid({ error: V.invalidId });

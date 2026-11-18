@@ -12,10 +12,10 @@ import type {
   BrandingDto,
   createAcademicYearSchema,
   createUserSchema,
-  inviteUserSchema,
   Locale,
   OrgDto,
   updateAcademicYearSchema,
+  resetUserPasswordSchema,
   updateOrgSchema,
   updateUserSchema,
 } from '@bareeq/shared';
@@ -100,19 +100,7 @@ export function useUsers(q: QueryParams) {
   });
 }
 
-export function useInviteUser() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: z.output<typeof inviteUserSchema>) =>
-      apiFetch('/users/invite', { method: 'POST', body, schema: profileSchema }),
-    onSuccess: () => {
-      invalidate(qc, userKeys.all);
-      toastSuccess('users.invited');
-    },
-  });
-}
-
-/** Creates an account with an initial password (no e-mail needed). */
+/** Creates an account with a username and an initial password. */
 export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
@@ -135,6 +123,15 @@ export function useUpdateUser() {
       toastSuccess('users.updated');
     },
     onError: toastError,
+  });
+}
+
+/** Admin sets a new password for a user; that user is signed out everywhere. */
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: z.output<typeof resetUserPasswordSchema> }) =>
+      apiFetch(`/users/${id}/password`, { method: 'PUT', body }),
+    onSuccess: () => toastSuccess('users.passwordReset'),
   });
 }
 

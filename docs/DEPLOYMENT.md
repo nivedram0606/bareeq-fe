@@ -1,5 +1,9 @@
 # Deploying Bareeq Cloud Starter
 
+> **Note (2026-11):** Supabase has been removed. The app now runs on plain PostgreSQL with
+> username/password sign-in handled by the API. Sections below about Supabase Auth, Storage,
+> SMTP, JWKS and the Supabase CLI are out of date; follow `prod-deployment.md` instead.
+
 This guide takes a fresh checkout to a running production pilot. Read it top to bottom once;
 each step lists the exact commands.
 

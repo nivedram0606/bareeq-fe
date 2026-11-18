@@ -46,8 +46,16 @@ export function buildUrl(path: string, query?: QueryParams): string {
   return url.toString();
 }
 
+/** Turns an API-relative asset path (e.g. an org's `logoUrl`) into an absolute URL. */
+export function apiAssetUrl(path: string): string;
+export function apiAssetUrl(path: string | null | undefined): string | null;
+export function apiAssetUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  return /^https?:\/\//.test(path) ? path : `${env.apiUrl}${path}`;
+}
+
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   query?: QueryParams;
   /** JSON body, or FormData for uploads. */
   body?: unknown;

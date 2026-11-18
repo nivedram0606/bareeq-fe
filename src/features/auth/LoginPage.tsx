@@ -3,63 +3,20 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { z } from 'zod';
+import type { z } from 'zod';
 
-import { emailSchema, V } from '@bareeq/shared';
+import { loginSchema } from '@bareeq/shared';
 
 import { FormField } from '@/components/FormField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert } from '@/components/ui/misc';
-import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { AuthLayout } from './AuthLayout';
 
-const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, { error: V.required }),
-});
-type LoginValues = z.infer<typeof loginSchema>;
-
-const forgotSchema = z.object({ email: emailSchema });
-type ForgotValues = z.infer<typeof forgotSchema>;
-
-function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
-  const { t } = useTranslation();
-  const [sent, setSent] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const form = useForm<ForgotValues>({
-    resolver: zodResolver(forgotSchema),
-    defaultValues: { email: '' },
-  });
-
-  const onSubmit = form.handleSubmit(async ({ email }) => {
-    setFailed(false);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) setFailed(true);
-    else setSent(true);
-  });
-
-  return (
-    <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
-      <p className="text-sm text-muted-foreground">{t('auth.forgotSubtitle')}</p>
-      {sent ? <Alert>{t('auth.resetLinkSent')}</Alert> : null}
-      {failed ? <Alert variant="destructive">{t('auth.errors.generic')}</Alert> : null}
-      <FormField label={t('auth.email')} error={form.formState.errors.email?.message} required>
-        <Input type="email" autoComplete="email" dir="ltr" {...form.register('email')} />
-      </FormField>
-      <Button type="submit" disabled={form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? t('auth.sending') : t('auth.sendResetLink')}
-      </Button>
-      <Button variant="link" onClick={onBack}>
-        {t('auth.backToSignIn')}
-      </Button>
-    </form>
-  );
-}
+type LoginInput = z.input<typeof loginSchema>;
+type LoginOutput = z.output<typeof loginSchema>;
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -68,34 +25,25 @@ export function LoginPage() {
   const status = useAuthStore((s) => s.status);
   const signOutReason = useAuthStore((s) => s.error);
   const signIn = useAuthStore((s) => s.signIn);
-  const [mode, setMode] = useState<'signIn' | 'forgot'>('signIn');
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<LoginValues>({
+  const form = useForm<LoginInput, unknown, LoginOutput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { username: '', password: '' },
   });
 
   const from = (location.state as { from?: string } | null)?.from ?? '/';
   if (status === 'authenticated') return <Navigate to={from} replace />;
 
-  const onSubmit = form.handleSubmit(async ({ email, password }) => {
+  const onSubmit = form.handleSubmit(async ({ username, password }) => {
     setError(null);
     try {
-      await signIn(email, password);
+      await signIn(username, password);
       await navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'auth.errors.generic');
     }
   });
-
-  if (mode === 'forgot') {
-    return (
-      <AuthLayout title={t('auth.forgotTitle')}>
-        <ForgotPasswordForm onBack={() => setMode('signIn')} />
-      </AuthLayout>
-    );
-  }
 
   const message = error ?? signOutReason;
   return (
@@ -106,8 +54,19 @@ export function LoginPage() {
             {t(message, { defaultValue: t('auth.errors.generic') })}
           </Alert>
         ) : null}
-        <FormField label={t('auth.email')} error={form.formState.errors.email?.message} required>
-          <Input type="email" autoComplete="username" dir="ltr" {...form.register('email')} />
+        <FormField
+          label={t('auth.username')}
+          error={form.formState.errors.username?.message}
+          required
+        >
+          <Input
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            dir="ltr"
+            {...form.register('username')}
+          />
         </FormField>
         <FormField
           label={t('auth.password')}
@@ -119,9 +78,7 @@ export function LoginPage() {
         <Button type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
-        <Button variant="link" onClick={() => setMode('forgot')}>
-          {t('auth.forgotPassword')}
-        </Button>
+        <p className="text-center text-sm text-muted-foreground">{t('auth.forgotHint')}</p>
       </form>
     </AuthLayout>
   );

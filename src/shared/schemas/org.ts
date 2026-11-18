@@ -12,7 +12,7 @@ export const orgSchema = z.object({
   defaultLocale: z.enum(LOCALES),
   brandColor: z.string(),
   logoPath: z.string().nullable(),
-  /** Public URL of the logo in the `branding` bucket, or null. */
+  /** Logo URL relative to the API base (e.g. `/orgs/<id>/logo?v=…`), or null. */
   logoUrl: z.string().nullable(),
 });
 export type OrgDto = z.infer<typeof orgSchema>;

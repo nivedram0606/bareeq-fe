@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/misc';
+import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor, foregroundFor } from '@/lib/brand';
 import { toastError } from '@/lib/forms';
 import { useUiStore } from '@/stores/ui.store';
@@ -51,7 +52,7 @@ function LogoCard({ org }: { org: OrgDto }) {
         <div className="flex size-24 items-center justify-center overflow-hidden rounded-xl border bg-muted">
           {org.logoUrl ? (
             <img
-              src={org.logoUrl}
+              src={apiAssetUrl(org.logoUrl)}
               alt={t('settings.logoAlt', { school: schoolName(org, locale) })}
               className="size-full object-contain"
             />
