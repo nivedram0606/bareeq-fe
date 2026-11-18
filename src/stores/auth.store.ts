@@ -1,14 +1,15 @@
-import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
-import { meSchema } from '@bareeq/shared';
-import type { ProfileDto } from '@bareeq/shared';
+import { loginResponseSchema, meSchema } from '@bareeq/shared';
+import type { LoginResponse, ProfileDto } from '@bareeq/shared';
 
 import { apiFetch, configureApiAuth, isApiError } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
-import { supabase } from '@/lib/supabase';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
+/** The API session token and when it expires (ISO). */
+export type Session = LoginResponse;
 
 interface AuthState {
   session: Session | null;
@@ -18,15 +19,45 @@ interface AuthState {
   /** i18n key explaining why the user was signed out (e.g. deactivated account). */
   error: string | null;
   init: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Changes the signed-in user's password; other devices are signed out. */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   /** Re-reads /me (e.g. after the profile or organization changed). */
   refreshProfile: () => Promise<void>;
 }
 
 export const ORG_QUERY_KEY = ['org'] as const;
 
+const STORAGE_KEY = 'bareeq.session';
+
 let initialized = false;
+let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+
+/* ------------------------------------------------- persisted session token */
+
+function readStoredSession(): Session | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = loginResponseSchema.safeParse(JSON.parse(raw));
+    if (!parsed.success || Date.parse(parsed.data.expiresAt) <= Date.now()) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function storeSession(session: Session | null): void {
+  try {
+    if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Private mode / blocked storage: the session simply won't survive a reload.
+  }
+}
+
+/* --------------------------------------------------------------- helpers */
 
 const RETRY_DELAYS_MS = [400, 1200, 3000];
 const isTransient = (err: unknown): boolean =>
@@ -45,7 +76,37 @@ async function fetchMeWithRetry() {
   }
 }
 
+function signInError(err: unknown): string {
+  if (!isApiError(err)) return 'auth.errors.generic';
+  if (err.status === 401 || err.status === 400) return 'auth.errors.invalid_credentials';
+  if (err.status === 403 && /deactivated/i.test(err.message)) return 'auth.errors.inactive';
+  if (err.status === 429) return 'auth.errors.too_many_attempts';
+  return 'auth.errors.generic';
+}
+
 export const useAuthStore = create<AuthState>()((set, get) => {
+  /** Remembers the session and signs out automatically when it expires. */
+  function startSession(session: Session): void {
+    storeSession(session);
+    set({ session });
+    clearTimeout(expiryTimer);
+    const ms = Date.parse(session.expiresAt) - Date.now();
+    // setTimeout overflows above ~24.8 days; longer sessions are checked again on reload.
+    if (ms < 2 ** 31 - 1) {
+      expiryTimer = setTimeout(() => {
+        set({ error: 'auth.errors.expired' });
+        clear();
+      }, ms);
+    }
+  }
+
+  function clear(): void {
+    clearTimeout(expiryTimer);
+    storeSession(null);
+    queryClient.clear();
+    set({ session: null, profile: null, status: 'unauthenticated' });
+  }
+
   /** Loads /me; seeds the org query cache so the shell renders without a second request. */
   async function loadProfile(): Promise<void> {
     try {
@@ -57,18 +118,15 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         ? 'auth.errors.generic'
         : err.status === 403 && /deactivated/i.test(err.message)
           ? 'auth.errors.inactive'
-          : err.status === 403 || err.status === 401
-            ? 'auth.errors.profile'
-            : 'auth.errors.generic';
-      await supabase.auth.signOut({ scope: 'local' });
-      set({ session: null, profile: null, status: 'unauthenticated', error });
+          : err.status === 401
+            ? 'auth.errors.expired'
+            : err.status === 403
+              ? 'auth.errors.profile'
+              : 'auth.errors.generic';
+      clear();
+      set({ error });
       throw new Error(error, { cause: err });
     }
-  }
-
-  function clear(): void {
-    queryClient.clear();
-    set({ session: null, profile: null, status: 'unauthenticated' });
   }
 
   return {
@@ -82,50 +140,62 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       initialized = true;
 
       configureApiAuth({
-        getToken: () => get().session?.access_token,
-        onUnauthorized: () => void get().signOut(),
-      });
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
+        getToken: () => get().session?.token,
+        onUnauthorized: () => {
           if (get().session) clear();
-          return;
-        }
-        set({ session });
-        // Profile loads for new sessions (invite/recovery links). Deferred: supabase-js must not
-        // be re-entered from inside this callback.
-        if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && !get().profile) {
-          setTimeout(() => void loadProfile().catch(() => undefined), 0);
+        },
+      });
+
+      // Signing out (or in as someone else) in another tab applies here too.
+      window.addEventListener('storage', (e) => {
+        if (e.key !== STORAGE_KEY) return;
+        const next = readStoredSession();
+        if (!next) {
+          if (get().session) clear();
+        } else if (next.token !== get().session?.token) {
+          startSession(next);
+          void loadProfile().catch(() => undefined);
         }
       });
 
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      const stored = readStoredSession();
+      if (!stored) {
+        storeSession(null);
         set({ status: 'unauthenticated' });
         return;
       }
-      set({ session: data.session });
+      startSession(stored);
       await loadProfile().catch(() => undefined);
     },
 
-    async signIn(email, password) {
+    async signIn(username, password) {
       set({ error: null });
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error || !data.session) {
-        throw new Error(
-          error?.code === 'invalid_credentials' || error?.status === 400
-            ? 'auth.errors.invalid_credentials'
-            : 'auth.errors.generic',
-          { cause: error },
-        );
+      let session: Session;
+      try {
+        session = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: { username, password },
+          schema: loginResponseSchema,
+        });
+      } catch (err) {
+        throw new Error(signInError(err), { cause: err });
       }
-      set({ session: data.session });
+      startSession(session);
       await loadProfile();
     },
 
     async signOut() {
-      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       clear();
+      set({ error: null });
+    },
+
+    async changePassword(currentPassword, newPassword) {
+      const session = await apiFetch('/auth/change-password', {
+        method: 'POST',
+        body: { currentPassword, newPassword },
+        schema: loginResponseSchema,
+      });
+      startSession(session);
     },
 
     async refreshProfile() {

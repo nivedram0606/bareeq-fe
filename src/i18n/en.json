@@ -26,7 +26,8 @@
   "header": {
     "language": "Language",
     "userMenu": "User menu",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "changePassword": "Change password"
   },
   "languages": {
     "en": "English",
@@ -39,35 +40,30 @@
   },
   "auth": {
     "signInTitle": "Sign in",
-    "signInSubtitle": "Use the e-mail and password provided by your school administrator.",
-    "email": "E-mail",
+    "signInSubtitle": "Use the username and password provided by your school administrator.",
     "password": "Password",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
-    "forgotPassword": "Forgot password?",
-    "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your e-mail and we will send you a link to set a new password.",
-    "sendResetLink": "Send reset link",
-    "sending": "Sending…",
-    "resetLinkSent": "If an account exists for that e-mail, a reset link is on its way.",
-    "backToSignIn": "Back to sign in",
-    "resetTitle": "Set a new password",
-    "resetSubtitle": "Choose a password with at least 8 characters.",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "savePassword": "Save password",
     "saving": "Saving…",
     "passwordUpdated": "Your password has been saved.",
-    "resetLinkInvalid": "This link is invalid or has expired. Request a new reset link.",
-    "checkingLink": "Checking your link…",
     "errors": {
-      "invalid_credentials": "Incorrect e-mail or password.",
+      "invalid_credentials": "Incorrect username or password.",
       "inactive": "Your account has been deactivated. Contact your school administrator.",
       "profile": "Your account is not set up for this school. Contact your administrator.",
       "generic": "Something went wrong. Please try again.",
       "password_mismatch": "Passwords do not match.",
-      "password_short": "Use at least 8 characters."
-    }
+      "password_short": "Use at least 8 characters.",
+      "expired": "Your session has ended. Please sign in again.",
+      "too_many_attempts": "Too many sign-in attempts. Wait a few minutes and try again."
+    },
+    "username": "Username",
+    "forgotHint": "Forgot your password? Ask your school administrator to reset it.",
+    "changePasswordTitle": "Change password",
+    "changePasswordHint": "Your other devices will be signed out.",
+    "currentPassword": "Current password"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -126,12 +122,14 @@
     "invalid_sort": "Invalid sort order.",
     "discount_too_large": "Discount cannot be more than the amount.",
     "admission_no_taken": "This admission number is already used.",
-    "email_taken": "A user with this e-mail already exists.",
     "primary_required": "Mark another guardian as primary instead.",
     "logo_type": "Upload a PNG, JPG or SVG image.",
     "logo_size": "The logo must be 1 MB or smaller.",
     "invalid": "This value is not valid.",
-    "password_short": "Use at least 8 characters."
+    "password_short": "Use at least 8 characters.",
+    "invalid_username": "Use 3–50 characters: letters, numbers, dots, dashes or underscores.",
+    "username_taken": "This username is already taken.",
+    "wrong_password": "The current password is incorrect."
   },
   "table": {
     "pagination": "Pagination",
@@ -330,15 +328,10 @@
     "brandingSubtitle": "Your school’s logo and colour."
   },
   "users": {
-    "invited": "Invitation sent.",
     "updated": "User updated.",
-    "invite": "Invite user",
-    "inviteHint": "They will receive an e-mail with a link to set their password.",
     "fullName": "Full name",
     "email": "E-mail",
     "role": "Role",
-    "sending": "Sending…",
-    "sendInvite": "Send invitation",
     "you": "you",
     "roleFor": "Role for {{name}}",
     "status": "Status",
@@ -354,10 +347,16 @@
     "activateBody": "{{name}} will be able to sign in again.",
     "created": "User created. They can sign in now.",
     "create": "Create user",
-    "createHint": "Creates the account with an initial password — no e-mail is sent. Share the password securely; the user can change it with “Forgot password?”.",
+    "createHint": "Creates the account with a username and an initial password. Share them with the user securely; they can change the password after signing in.",
     "initialPassword": "Initial password",
     "initialPasswordHint": "At least 8 characters.",
-    "createSubmit": "Create user"
+    "createSubmit": "Create user",
+    "username": "Username",
+    "usernameHint": "3–50 characters: letters, numbers, dots, dashes or underscores. Used to sign in.",
+    "resetPassword": "Reset password",
+    "resetPasswordTitle": "Reset password for {{name}}",
+    "resetPasswordHint": "Set a new password and share it with the user securely. They will be signed out of all devices.",
+    "passwordReset": "Password reset. Share the new password with the user."
   },
   "years": {
     "created": "Academic year created.",

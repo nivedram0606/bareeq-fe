@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createAcademicYearSchema, updateAcademicYearSchema } from './academicYears.js';
 import { listQuerySchema, optionalEmail, optionalText } from './common.js';
 import { updateOrgSchema } from './org.js';
-import { inviteUserSchema, updateUserSchema } from './users.js';
+import { createUserSchema, loginSchema, updateUserSchema } from './users.js';
 
 describe('common schemas', () => {
   it('listQuery applies defaults, coerces and caps pageSize', () => {
@@ -35,16 +35,37 @@ describe('org schemas', () => {
 });
 
 describe('user schemas', () => {
-  it('invite requires a valid email, name and role', () => {
-    expect(inviteUserSchema.parse({ email: ' X@Y.com ', fullName: 'Sara', role: 'staff' })).toEqual(
-      { email: 'x@y.com', fullName: 'Sara', role: 'staff' },
-    );
-    expect(
-      inviteUserSchema.safeParse({ email: 'x@y.com', fullName: '', role: 'staff' }).success,
-    ).toBe(false);
-    expect(
-      inviteUserSchema.safeParse({ email: 'x@y.com', fullName: 'A', role: 'owner' }).success,
-    ).toBe(false);
+  const valid = { username: ' Sara.K ', fullName: 'Sara', role: 'staff', password: 'secret-123' };
+
+  it('create normalises the username and treats a blank e-mail as none', () => {
+    expect(createUserSchema.parse({ ...valid, email: '' })).toEqual({
+      username: 'sara.k',
+      fullName: 'Sara',
+      email: null,
+      role: 'staff',
+      password: 'secret-123',
+    });
+  });
+
+  it('create rejects bad usernames, short passwords, empty names and unknown roles', () => {
+    for (const bad of [
+      { username: 'ab' },
+      { username: 'has space' },
+      { username: 'x@y.com' },
+      { password: 'short' },
+      { fullName: '' },
+      { role: 'owner' },
+    ]) {
+      expect(createUserSchema.safeParse({ ...valid, ...bad }).success).toBe(false);
+    }
+  });
+
+  it('login accepts legacy e-mail usernames, lower-cased', () => {
+    expect(loginSchema.parse({ username: ' Admin@School.om ', password: 'x' })).toEqual({
+      username: 'admin@school.om',
+      password: 'x',
+    });
+    expect(loginSchema.safeParse({ username: '', password: 'x' }).success).toBe(false);
   });
 
   it('update requires at least one field', () => {

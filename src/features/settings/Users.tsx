@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MailPlus, Power, UserPlus } from 'lucide-react';
+import { KeyRound, Power, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
-import { createUserSchema, inviteUserSchema, ROLES } from '@bareeq/shared';
+import { createUserSchema, resetUserPasswordSchema, ROLES } from '@bareeq/shared';
 import type { ProfileDto, Role } from '@bareeq/shared';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -29,80 +29,16 @@ import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { useAuthStore } from '@/stores/auth.store';
 
-import { useCreateUser, useInviteUser, useUpdateUser, useUsers } from './api';
+import { useCreateUser, useResetUserPassword, useUpdateUser, useUsers } from './api';
 
-type Input_ = z.input<typeof inviteUserSchema>;
-type Output = z.output<typeof inviteUserSchema>;
 const PAGE_SIZE = 20;
 const FILTERS = ['search'] as const;
 const isRole = (v: string): v is Role => (ROLES as readonly string[]).includes(v);
 
-function InviteDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  const invite = useInviteUser();
-  const form = useForm<Input_, unknown, Output>({
-    resolver: zodResolver(inviteUserSchema),
-    defaultValues: { email: '', fullName: '', role: 'staff' },
-  });
-  const { errors, isSubmitting } = form.formState;
-
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      await invite.mutateAsync(values);
-      form.reset();
-      onOpenChange(false);
-    } catch (err) {
-      applyServerErrors(err, form.setError, ['email', 'fullName', 'role']);
-    }
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
-        <DialogHeader>
-          <DialogTitle>{t('users.invite')}</DialogTitle>
-          <DialogDescription>{t('users.inviteHint')}</DialogDescription>
-        </DialogHeader>
-        <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
-          <FormField label={t('users.fullName')} error={errors.fullName?.message} required>
-            <Input autoComplete="off" {...form.register('fullName')} />
-          </FormField>
-          <FormField label={t('users.email')} error={errors.email?.message} required>
-            <Input type="email" dir="ltr" autoComplete="off" {...form.register('email')} />
-          </FormField>
-          <FormField label={t('users.role')} error={errors.role?.message} required>
-            <NativeSelect {...form.register('role')}>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {t(`roles.${r}`)}
-                </option>
-              ))}
-            </NativeSelect>
-          </FormField>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? t('users.sending') : t('users.sendInvite')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 type CreateInput = z.input<typeof createUserSchema>;
 type CreateOutput = z.output<typeof createUserSchema>;
 
-/** Creates an account with an initial password — works without e-mail (SMTP) set up. */
+/** Creates an account with a username and an initial password. */
 function CreateUserDialog({
   open,
   onOpenChange,
@@ -114,7 +50,7 @@ function CreateUserDialog({
   const create = useCreateUser();
   const form = useForm<CreateInput, unknown, CreateOutput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { email: '', fullName: '', role: 'staff', password: '' },
+    defaultValues: { username: '', fullName: '', email: '', role: 'staff', password: '' },
   });
   const { errors, isSubmitting } = form.formState;
 
@@ -124,7 +60,7 @@ function CreateUserDialog({
       form.reset();
       onOpenChange(false);
     } catch (err) {
-      applyServerErrors(err, form.setError, ['email', 'fullName', 'role', 'password']);
+      applyServerErrors(err, form.setError, ['username', 'email', 'fullName', 'role', 'password']);
     }
   });
 
@@ -139,7 +75,21 @@ function CreateUserDialog({
           <FormField label={t('users.fullName')} error={errors.fullName?.message} required>
             <Input autoComplete="off" {...form.register('fullName')} />
           </FormField>
-          <FormField label={t('users.email')} error={errors.email?.message} required>
+          <FormField
+            label={t('users.username')}
+            error={errors.username?.message}
+            hint={t('users.usernameHint')}
+            required
+          >
+            <Input
+              dir="ltr"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              {...form.register('username')}
+            />
+          </FormField>
+          <FormField label={t('users.email')} error={errors.email?.message}>
             <Input type="email" dir="ltr" autoComplete="off" {...form.register('email')} />
           </FormField>
           <FormField label={t('users.role')} error={errors.role?.message} required>
@@ -173,14 +123,72 @@ function CreateUserDialog({
   );
 }
 
+type ResetInput = z.input<typeof resetUserPasswordSchema>;
+type ResetOutput = z.output<typeof resetUserPasswordSchema>;
+
+/** Admin sets a new password for someone who forgot theirs. */
+function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClose: () => void }) {
+  const { t } = useTranslation();
+  const reset = useResetUserPassword();
+  const form = useForm<ResetInput, unknown, ResetOutput>({
+    resolver: zodResolver(resetUserPasswordSchema),
+    defaultValues: { password: '' },
+  });
+  const { errors, isSubmitting } = form.formState;
+
+  const close = () => {
+    form.reset();
+    onClose();
+  };
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    if (!user) return;
+    try {
+      await reset.mutateAsync({ id: user.id, body: values });
+      close();
+    } catch (err) {
+      applyServerErrors(err, form.setError, ['password']);
+    }
+  });
+
+  return (
+    <Dialog open={Boolean(user)} onOpenChange={(o) => !o && close()}>
+      <DialogContent closeLabel={t('common.close')}>
+        <DialogHeader>
+          <DialogTitle>{t('users.resetPasswordTitle', { name: user?.fullName ?? '' })}</DialogTitle>
+          <DialogDescription>{t('users.resetPasswordHint')}</DialogDescription>
+        </DialogHeader>
+        <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
+          <FormField
+            label={t('auth.newPassword')}
+            error={errors.password?.message}
+            hint={t('users.initialPasswordHint')}
+            required
+          >
+            <Input type="password" autoComplete="new-password" {...form.register('password')} />
+          </FormField>
+          <DialogFooter>
+            <Button variant="outline" onClick={close}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t('common.saving') : t('users.resetPassword')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function UsersPage() {
   const { t } = useTranslation();
   const myId = useAuthStore((s) => s.profile?.id);
   const { values, page, setFilters } = useUrlFilters(FILTERS);
   const users = useUsers({ ...values, page, pageSize: PAGE_SIZE });
   const update = useUpdateUser();
-  const [inviteOpen, setInviteOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [resetting, setResetting] = useState<ProfileDto | null>(null);
   const [toggling, setToggling] = useState<ProfileDto | null>(null);
 
   const columns = useMemo<ColumnDef<ProfileDto, unknown>[]>(
@@ -198,9 +206,20 @@ export function UsersPage() {
         ),
       },
       {
+        accessorKey: 'username',
+        header: t('users.username'),
+        cell: ({ row }) => (
+          <span className="ltr-nums" dir="ltr">
+            {row.original.username}
+          </span>
+        ),
+      },
+      {
         accessorKey: 'email',
         header: t('users.email'),
-        cell: ({ row }) => <span className="ltr-nums">{row.original.email}</span>,
+        cell: ({ row }) => (
+          <span className="ltr-nums text-muted-foreground">{row.original.email ?? '—'}</span>
+        ),
       },
       {
         accessorKey: 'role',
@@ -243,10 +262,16 @@ export function UsersPage() {
         meta: { className: 'text-end' },
         cell: ({ row }) =>
           row.original.id === myId ? null : (
-            <Button variant="ghost" size="sm" onClick={() => setToggling(row.original)}>
-              <Power aria-hidden="true" />
-              {row.original.isActive ? t('users.deactivate') : t('users.activate')}
-            </Button>
+            <div className="flex justify-end gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setResetting(row.original)}>
+                <KeyRound aria-hidden="true" />
+                {t('users.resetPassword')}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setToggling(row.original)}>
+                <Power aria-hidden="true" />
+                {row.original.isActive ? t('users.deactivate') : t('users.activate')}
+              </Button>
+            </div>
           ),
       },
     ],
@@ -259,16 +284,10 @@ export function UsersPage() {
         title={t('users.title')}
         description={t('users.subtitle')}
         actions={
-          <>
-            <Button variant="outline" onClick={() => setCreateOpen(true)}>
-              <UserPlus aria-hidden="true" />
-              {t('users.create')}
-            </Button>
-            <Button onClick={() => setInviteOpen(true)}>
-              <MailPlus aria-hidden="true" />
-              {t('users.invite')}
-            </Button>
-          </>
+          <Button onClick={() => setCreateOpen(true)}>
+            <UserPlus aria-hidden="true" />
+            {t('users.create')}
+          </Button>
         }
       />
       <div className="mb-4">
@@ -295,8 +314,8 @@ export function UsersPage() {
           onPageChange: (p) => setFilters({ page: p }),
         }}
       />
-      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />
       <ConfirmDialog
         open={Boolean(toggling)}
         onOpenChange={(o) => !o && setToggling(null)}

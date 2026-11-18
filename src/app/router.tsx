@@ -4,7 +4,6 @@ import { ADMIN_ONLY, STAFF_OR_ADMIN } from '@bareeq/shared';
 
 import { FullPageSpinner } from '@/components/States';
 import { LoginPage } from '@/features/auth/LoginPage';
-import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 
 import { AppLayout } from './AppLayout';
@@ -19,7 +18,6 @@ const page = <M,>(load: () => Promise<M>, pick: (m: M) => React.ComponentType) =
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage /> },
-  { path: '/reset-password', element: <ResetPasswordPage />, errorElement: <RouteErrorPage /> },
   {
     element: <ProtectedRoute />,
     errorElement: <RouteErrorPage />,
@@ -33,6 +31,13 @@ export const router = createBrowserRouter([
             errorElement: <RouteErrorPage />,
             children: [
               { index: true, element: <DashboardPage /> },
+              {
+                path: 'account/password',
+                ...page(
+                  () => import('@/features/auth/ChangePasswordPage'),
+                  (m) => m.ChangePasswordPage,
+                ),
+              },
               {
                 path: 'students',
                 ...page(

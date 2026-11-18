@@ -19,7 +19,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router'],
-          supabase: ['@supabase/supabase-js'],
           ui: ['radix-ui', 'lucide-react', 'sonner'],
           data: [
             '@tanstack/react-query',

@@ -1,5 +1,5 @@
 # Netlify: Bareeq Cloud Web Frontend
-# Set VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY and VITE_API_URL
+# Set VITE_API_URL (e.g. https://<api-host>/api/v1)
 # in Site configuration -> Environment variables.
 [build]
   command = "pnpm build"

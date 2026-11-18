@@ -232,3 +232,14 @@ student_id)` guarantees a payment's student matches its fee item's student.
     `pg_dump` of the `public` and `drizzle` schemas and an `auth` export via the Supabase CLI;
     the in-app ZIP export is an archive for the school, not a restore source.
 74. **CI** also builds the API Docker image so the Dockerfile cannot silently break.
+75. **Supabase removed; plain PostgreSQL only (2026-11).** Auth is now username + password in the
+    API: bcrypt hashes (`bcryptjs`, cost 12) in `profiles.password_hash`, HS256 session JWTs signed
+    with `JWT_SECRET` (default 12 h), and `profiles.session_version` bumped on every password change
+    or admin reset to revoke older tokens. `POST /auth/login` has its own limiter (10 failed
+    attempts per IP per 15 min). E-mail invites and e-mail password resets are gone (no SMTP):
+    admins create users and reset passwords; users change their own from the user menu. Logos are
+    stored in `organizations.logo_data` and served publicly from `GET /orgs/:id/logo`. Migrations
+    `0000`–`0002` skip their Supabase-only statements when `auth.users` / the `anon` and
+    `authenticated` roles do not exist; `0003_local_auth` upgrades an existing Supabase database
+    (usernames = old e-mails, bcrypt hashes copied from `auth.users`). This supersedes the
+    Supabase-specific parts of decisions 8, 9, 31 and 46 and the auth notes in `DEPLOYMENT.md`.

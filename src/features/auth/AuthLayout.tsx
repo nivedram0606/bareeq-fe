@@ -6,6 +6,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/misc';
 import { schoolName, useBranding } from '@/features/settings/api';
+import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor } from '@/lib/brand';
 import { useUiStore } from '@/stores/ui.store';
 
@@ -49,7 +50,11 @@ export function AuthLayout({
             {isPending ? (
               <Skeleton className="size-16 rounded-xl" />
             ) : branding?.logoUrl ? (
-              <img src={branding.logoUrl} alt="" className="size-16 rounded-xl object-contain" />
+              <img
+                src={apiAssetUrl(branding.logoUrl)}
+                alt=""
+                className="size-16 rounded-xl object-contain"
+              />
             ) : (
               <span
                 aria-hidden="true"
