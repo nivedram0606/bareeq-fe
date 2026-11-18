@@ -20,12 +20,14 @@ Each entry: what was decided, and why. Newest at the bottom.
 6. **Phase-0 env schema** only validates `NODE_ENV`, `PORT`, `CORS_ORIGIN`, `LOG_LEVEL`; database
    and Supabase variables are added (and required) in Phase 2 when they are first used.
    `CORS_ORIGIN` accepts a comma-separated list.
+    _Superseded by 75: Supabase variables no longer exist._
 7. **Extra lint relaxations.** `import-x/no-named-as-default(-member)` are off: they misfire on
    packages with both default and named exports (e.g. `typescript-eslint`) and TS already checks
    imports.
 8. **CI and Supabase.** The Supabase CLI start step is added to CI in Phase 1 together with
    `supabase/config.toml`, when DB-backed tests first exist.
 
+    _Superseded by 75: no Supabase CLI; CI needs only a PostgreSQL service._
 ## Phase 1
 
 9. **Supabase CLI** is a root dev dependency (`pnpm exec supabase …`). Local config:
@@ -33,6 +35,7 @@ Each entry: what was decided, and why. Newest at the bottom.
    password reset redirect allowed for `/reset-password`, minimum password length 8. Realtime,
    edge runtime and analytics are disabled (unused). Supabase's own migrations/seed are disabled —
    **Drizzle owns the schema** (`apps/api/src/db/migrations`).
+    _Superseded by 75: no Supabase CLI or config; Drizzle still owns the schema._
 10. **Locally `DATABASE_URL` = `DIRECT_DATABASE_URL`** (direct port 54322); the pooler is only used
     in hosted environments. `prepare: false` is always set so both work.
 11. **Migrations** are applied by `src/db/migrate.ts` (drizzle-orm migrator) rather than
@@ -75,16 +78,19 @@ student_id)` guarantees a payment's student matches its fee item's student.
 25. **Auth:** JWT verified against the JWKS with issuer and `aud = authenticated`. A valid token
     whose user has no profile, or an inactive profile, is 403. Deactivation is enforced by the
     API on every request (the Supabase account itself is left intact so it can be reactivated).
+    _Superseded by 75: tokens are now the API's own HS256 JWTs._
 26. **Self-protection:** an admin cannot demote or deactivate themselves (409), so an org always
     keeps at least one active admin.
 27. **Invites** use `inviteUserByEmail` with `redirectTo = <first CORS_ORIGIN>/reset-password`
     (the invitee sets a password there). If the profile insert fails, the invited auth user is
     deleted. Existing e-mail → 409. Locally, invite e-mails land in Mailpit
     (http://127.0.0.1:54324).
+    _Superseded by 75: e-mail invites removed; admins create users with a password._
 28. **Logo upload** is parsed with Node's built-in WHATWG `Request#formData()` — no multipart
     dependency. Body capped at 1 MiB + 64 KiB; the file must be PNG/JPEG/SVG ≤ 1 MiB and its
     leading bytes must match the declared type. Stored at `branding/<orgId>/logo-<ts>.<ext>`;
     the previous logo is removed.
+    _Superseded by 75: the logo is now stored in `organizations.logo_data`, not a storage bucket._
 29. **Audit rows** are also written for organization changes and user role/status changes
     (security-relevant), in addition to the payment/void/student/fee events required later.
 30. **Academic years** list is paginated like every list (default sort: newest start date).
@@ -93,6 +99,7 @@ student_id)` guarantees a payment's student matches its fee item's student.
     through GoTrue), each test file in its own throw-away organization(s), cleaned up afterwards
     (rows, auth users, storage objects).
 
+    _Superseded by 75: tests create profiles directly and sign in through `POST /auth/login`._
 ## Phase 3
 
 32. **Overpayment** is allowed: status stays `paid`, `outstanding` goes negative (the UI shows a
@@ -143,6 +150,7 @@ student_id)` guarantees a payment's student matches its fee item's student.
     chosen by WCAG contrast so primary buttons stay readable with any brand colour.
 46. **Invite & reset links** both land on `/reset-password` (Supabase `redirectTo`); supabase-js
     turns the link into a session and the user sets a password there. Sign-up is disabled.
+    _Superseded by 75: `/reset-password` removed; see the Change password page and admin reset._
 47. **UI components** follow shadcn/ui (new-york style, written into `components/ui`) on the
     unified `radix-ui` package, with `sonner` for toasts and `lucide-react` icons.
     `prettier-plugin-tailwindcss` needs `tailwindStylesheet` for Tailwind v4 (added to
@@ -191,6 +199,7 @@ student_id)` guarantees a payment's student matches its fee item's student.
     dependency-free accessibility checks on every page (labelled controls, named buttons/links,
     image alt, one `<h1>`, `lang`/`dir`) and verifies dialog focus trap, Escape and focus return.
     Tests use unique suffixes so they can run repeatedly against the same database.
+    _Superseded by 75: invites no longer exist; create the viewer through Settings → Users → Create user._
 62. **No axe-core:** not on the approved dependency list, so the a11y checks above are
     hand-written. Colour contrast was reviewed against the tokens (body text 15.9:1, muted
     7.5:1, white on default brand teal 5.5:1, badge text ≥ 4.5:1); custom brand colours get an
@@ -231,15 +240,17 @@ student_id)` guarantees a payment's student matches its fee item's student.
 73. **Backups:** Supabase managed backups (paid plans) / PITR, plus a documented nightly
     `pg_dump` of the `public` and `drizzle` schemas and an `auth` export via the Supabase CLI;
     the in-app ZIP export is an archive for the school, not a restore source.
+    _Superseded by 75: plain `pg_dump` of `public` + `drizzle` now covers users and the logo too._
 74. **CI** also builds the API Docker image so the Dockerfile cannot silently break.
 75. **Supabase removed; plain PostgreSQL only (2026-11).** Auth is now username + password in the
     API: bcrypt hashes (`bcryptjs`, cost 12) in `profiles.password_hash`, HS256 session JWTs signed
-    with `JWT_SECRET` (default 12 h), and `profiles.session_version` bumped on every password change
-    or admin reset to revoke older tokens. `POST /auth/login` has its own limiter (10 failed
+    with `JWT_SECRET` (default 12 h; required in production, otherwise a random per-process
+    secret is generated — never a fixed fallback), and `profiles.session_version` bumped on
+    every password change or admin reset to revoke older tokens. `POST /auth/login` has its own limiter (10 failed
     attempts per IP per 15 min). E-mail invites and e-mail password resets are gone (no SMTP):
     admins create users and reset passwords; users change their own from the user menu. Logos are
     stored in `organizations.logo_data` and served publicly from `GET /orgs/:id/logo`. Migrations
     `0000`–`0002` skip their Supabase-only statements when `auth.users` / the `anon` and
     `authenticated` roles do not exist; `0003_local_auth` upgrades an existing Supabase database
     (usernames = old e-mails, bcrypt hashes copied from `auth.users`). This supersedes the
-    Supabase-specific parts of decisions 8, 9, 31 and 46 and the auth notes in `DEPLOYMENT.md`.
+    Supabase-specific parts of decisions 6, 8, 9, 25, 27, 28, 31, 46, 61 and 73.

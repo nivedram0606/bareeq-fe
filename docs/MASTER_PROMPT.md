@@ -86,10 +86,10 @@ Payment gateway / online payments, automated or recurring billing, invoices/PDF 
 ### 2.6 Configuration, branding, handover
 
 - **US-CFG-01 Organization**: one org record (name, name_ar, currency `OMR`, default locale, brand colour, logo).
-- **US-CFG-02 Branding**: logo upload (Supabase Storage, PNG/JPG/SVG ≤ 1 MB) + name shown in header and login page; brand colour applied via CSS variable.
+- **US-CFG-02 Branding**: logo upload (stored in PostgreSQL, served publicly by the API; PNG/JPG/SVG ≤ 1 MB) + name shown in header and login page; brand colour applied via CSS variable.
 - **US-CFG-03 Smoke tests**: Playwright E2E covering the main journey (Section 9).
 - **US-CFG-04 Data export**: admin downloads a ZIP containing one CSV per table.
-- Users: admin can invite users by email (Supabase Admin API `inviteUserByEmail`), set role, deactivate. The first admin is created by a seed script.
+- Users: admin creates users with a **username and initial password** (e-mail optional), sets role, resets passwords, deactivates. Users change their own password from the user menu. No e-mail/SMTP is involved. The first admin is created by a seed script (or the one-time `POST /setup/admin`).
 
 ---
 
@@ -107,26 +107,26 @@ Payment gateway / online payments, automated or recurring billing, invoices/PDF 
 - TanStack Table for lists
 - Tailwind CSS + shadcn/ui (Radix)
 - i18next + react-i18next (`en`, `ar`), RTL via `<html dir>`; use Tailwind logical utilities (`ms-*`, `pe-*`, `text-start`)
-- `@supabase/supabase-js` — **auth only** (sign in, reset password, session)
+- Auth via the API only: `POST /auth/login` returns a session token kept in `localStorage` and sent as a bearer token
 - Money/date formatting via `Intl.NumberFormat` (`OMR`, 3 decimals) and `Intl.DateTimeFormat`
 
 **Backend — `apps/api`**
 
 - Node.js + TypeScript + Express 5
-- Drizzle ORM + `postgres` driver (with `prepare: false` for the Supavisor transaction pooler)
+- Drizzle ORM + `postgres` driver (with `prepare: false` so transaction poolers such as PgBouncer work)
 - `drizzle-kit` for SQL migrations
-- `jose` to verify Supabase JWTs via JWKS
+- `bcryptjs` for password hashing; `jose` to sign and verify HS256 session JWTs (`JWT_SECRET`)
 - `helmet`, `cors`, `express-rate-limit`, `pino` + `pino-http`
 - `csv-stringify` for CSV, `archiver` for ZIP export
 - Zod for env + request validation (schemas imported from `packages/shared`)
 
 **Shared — `packages/shared`**: Zod schemas, inferred DTO types, enums (`ROLES`, `STUDENT_STATUS`, `PAY_METHODS`), role helpers.
 
-**Database / platform**: Supabase (PostgreSQL 15+, Auth, Storage). Local dev uses the Supabase CLI (`supabase start`).
+**Database / platform**: plain PostgreSQL 14+ (managed or self-hosted). Local dev uses any local Postgres (e.g. Docker or Homebrew). No external auth or storage service.
 
 **Quality**: ESLint 9 flat config + typescript-eslint (type-aware) + react-hooks + react-refresh + jsx-a11y + @tanstack/eslint-plugin-query + import-x + eslint-config-prettier; Prettier 3 + prettier-plugin-tailwindcss; Husky + lint-staged; `.editorconfig`.
 
-**Testing**: Vitest (unit), Vitest + Supertest (API integration against local Supabase DB), Playwright (E2E smoke).
+**Testing**: Vitest (unit), Vitest + Supertest (API integration against a local PostgreSQL database), Playwright (E2E smoke).
 
 **CI**: GitHub Actions — install → lint → format:check → typecheck → test → build.
 
@@ -152,7 +152,7 @@ bareeq-cloud/
 │  │  │  ├─ components/ui/  # shadcn components
 │  │  │  ├─ components/     # DataTable, PageHeader, ConfirmDialog, MoneyText, RoleGate
 │  │  │  ├─ stores/         # auth.store.ts, ui.store.ts (Zustand)
-│  │  │  ├─ lib/            # api.ts (typed fetch), supabase.ts, queryClient.ts, format.ts, cn.ts
+│  │  │  ├─ lib/            # api.ts (typed fetch), env.ts, queryClient.ts, format.ts, cn.ts
 │  │  │  ├─ i18n/           # index.ts, en.json, ar.json
 │  │  │  └─ main.tsx
 │  │  ├─ index.html
@@ -173,7 +173,6 @@ bareeq-cloud/
 │     └─ .env.example
 ├─ packages/shared/src/     # schemas/*.ts, enums.ts, index.ts
 ├─ e2e/                     # Playwright specs
-├─ supabase/                # supabase CLI config (config.toml)
 ├─ docs/                    # PRD.pdf, MASTER_PROMPT.md, DECISIONS.md
 ├─ .github/workflows/ci.yml
 ├─ .husky/pre-commit
@@ -191,7 +190,7 @@ Layering in the API: **routes → controller (HTTP only) → service (business r
 
 ---
 
-## 5. Database (Supabase PostgreSQL)
+## 5. Database (PostgreSQL)
 
 All tables: `id uuid pk default gen_random_uuid()`, `org_id uuid not null references organizations(id)` (except `organizations`), `created_at`, `updated_at timestamptz default now()`. Money = `numeric(12,3)`. Add an `updated_at` trigger.
 
@@ -199,8 +198,8 @@ Enums: `user_role ('admin','staff','viewer')`, `record_status ('active','inactiv
 
 | Table            | Columns                                                                                                                                                        |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `organizations`  | name, name_ar, currency default 'OMR', default_locale default 'en', brand_color, logo_path                                                                     |
-| `profiles`       | id = `auth.users.id` (pk, fk), org_id, full_name, email, role `user_role`, is_active bool default true                                                         |
+| `organizations`  | name, name_ar, currency default 'OMR', default_locale default 'en', brand_color, logo_path, logo_mime, logo_data bytea                                         |
+| `profiles`       | org_id, username (unique, case-insensitive), password_hash (bcrypt), session_version int, full_name, email null, role `user_role`, is_active bool default true |
 | `academic_years` | name, start_date, end_date, is_current bool (only one current per org — partial unique index)                                                                  |
 | `classes`        | name, grade, section, academic_year_id fk; unique (org_id, academic_year_id, name)                                                                             |
 | `students`       | admission_no, first_name, last_name, name_ar, dob, gender, class_id fk null, status `record_status` default 'active', joined_on; unique (org_id, admission_no) |
@@ -214,17 +213,18 @@ View `v_fee_balances` (per fee item): `net_due = amount - discount`, `paid = sum
 
 Indexes: `students(org_id, class_id, status)`, `students(org_id, lower(last_name))`, `fee_items(org_id, student_id)`, `payments(org_id, paid_on)`, `payments(fee_item_id)`, `guardians(student_id)`.
 
-**Security**: enable RLS on **every** table with **no policies** so the anon/authenticated keys cannot read data through Supabase's auto REST API. Only the Node API (DB owner connection) accesses data. Storage bucket `branding` is public-read; uploads go through the API with the service-role key.
+**Security**: only the Node API (DB owner connection) accesses data; RLS stays enabled on every table with no policies as defence in depth. Password hashes and logo bytes are never returned by list/export endpoints. The logo is served publicly from `GET /orgs/:id/logo` with a strict CSP.
 
-Seed (`pnpm db:seed`): one organization, current academic year, 3 classes, the first admin (email/password from env `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, created via Supabase Admin API), and optional demo data behind `--demo`.
+Seed (`pnpm db:seed`): one organization, current academic year, 3 classes, the first admin (username/password from env `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`), and optional demo data behind `--demo`.
 
 ---
 
 ## 6. Authentication & authorization
 
-1. Web signs in with `supabase.auth.signInWithPassword()`; `useAuthStore` listens to `onAuthStateChange`.
-2. Every API call sends `Authorization: Bearer <access_token>`.
-3. API `auth` middleware verifies the JWT with `jose.createRemoteJWKSet(SUPABASE_JWKS_URL)`, checks issuer/audience, loads `profiles` row, rejects inactive users (403), sets `req.user = { id, orgId, role }`.
+1. Web signs in with `POST /auth/login { username, password }` → `{ token, expiresAt }`; `useAuthStore` stores it in `localStorage`, signs out on expiry, and syncs sign-out across tabs. Failed logins are rate-limited (10 per IP per 15 min) and unknown users and wrong passwords get the same 401.
+2. Every API call sends `Authorization: Bearer <token>`.
+3. API `auth` middleware verifies the HS256 JWT with `JWT_SECRET` (issuer/audience/expiry), loads the `profiles` row, rejects tokens whose `sv` claim no longer matches `session_version` (401; bumped on password change/reset) and inactive users (403), sets `req.user = { id, orgId, role, username }`.
+   `POST /auth/change-password` lets a user change their own password; admins use `PUT /users/:id/password`.
 4. `requireRole(...roles)` guards routes. Every repo query filters by `req.user.orgId`.
 
 Permission matrix:
@@ -249,9 +249,11 @@ Conventions: JSON; Zod-validated `body`, `query`, `params` via a `validate()` mi
 | Method & path                                                                                                       | Roles                      |
 | ------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `GET /health`                                                                                                       | public                     |
+| `POST /auth/login`, `GET /branding`, `GET /orgs/:id/logo`                                                           | public                     |
+| `POST /auth/change-password`                                                                                        | any                        |
 | `GET /me`                                                                                                           | any                        |
 | `GET /org`, `PATCH /org`, `POST /org/logo` (multipart)                                                              | read any; write admin      |
-| `GET /users`, `POST /users/invite`, `PATCH /users/:id` (role, is_active)                                            | admin                      |
+| `GET /users`, `POST /users`, `PATCH /users/:id` (role, is_active), `PUT /users/:id/password`                        | admin                      |
 | `GET /academic-years`, `POST`, `PATCH /:id`                                                                         | read any; write admin      |
 | `GET /classes`, `POST /classes`, `PATCH /classes/:id`                                                               | read any; write staff+     |
 | `GET /students?classId&status&search`, `POST /students`, `GET /students/:id`, `PATCH /students/:id`                 | read viewer+; write staff+ |
@@ -316,7 +318,7 @@ Rules:
 - API integration: auth (missing/invalid token 401, inactive 403), role guards (viewer 403 on every write), student CRUD + unique admission no 409, payment → balance updates, void excludes from balance, org isolation (a record with another `org_id` returns 404), CSV endpoints.
 - E2E smoke (Playwright) = the handover checklist: login as admin → create class → create student with guardian → add fee 100.000 → record payment 40.000 → see `partial` & outstanding 60.000 → outstanding report shows it → export CSV downloads → edit a staff record → switch to Arabic and verify `dir="rtl"`.
 
-**CI** (`.github/workflows/ci.yml`): pnpm cache, Node 22, `pnpm install --frozen-lockfile`, lint, format:check, typecheck, unit + API tests (start Supabase CLI in CI), build.
+**CI** (`.github/workflows/ci.yml`): pnpm cache, Node 22, `pnpm install --frozen-lockfile`, lint, format:check, typecheck, unit + API tests (PostgreSQL service container in CI), build.
 
 ---
 
@@ -325,13 +327,13 @@ Rules:
 | Phase                 | Deliverable                                                                                                                                                                                                             | Exit check                                                                                         |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | **0. Scaffold**       | pnpm monorepo, tsconfig base, apps/web (Vite React TS), apps/api (Express TS), packages/shared, ESLint, Prettier, Husky, lint-staged, .editorconfig, CLAUDE.md, README, DECISIONS.md, `.env.example` files, CI workflow | `pnpm lint && pnpm format:check && pnpm typecheck` pass; `pnpm dev` serves both; `GET /health` 200 |
-| **1. Database**       | Supabase CLI config, Drizzle schema, migrations (tables, enums, views, indexes, triggers, RLS enabled), seed script                                                                                                     | `supabase start`, `pnpm db:migrate`, `pnpm db:seed` succeed; views return correct balances         |
+| **1. Database**       | Drizzle schema, migrations (tables, enums, views, indexes, triggers, RLS enabled), seed script                                                                                                                          | `pnpm db:migrate`, `pnpm db:seed` succeed on local Postgres; views return correct balances         |
 | **2. API core**       | env validation, logger, errors, validate middleware, JWT auth, requireRole, org/me/users/academic-years endpoints, audit helper, tests                                                                                  | auth + role tests pass                                                                             |
 | **3. API domain**     | classes, students, guardians, staff, fees, payments (+void), dashboard, reports, CSV, ZIP export, tests                                                                                                                 | all API integration tests pass                                                                     |
-| **4. Web foundation** | Tailwind + shadcn, router, providers, Zustand stores, Supabase auth, api client, i18n (en/ar + RTL), layout shell, RoleGate, login/reset pages                                                                          | can log in as seeded admin, see branded shell, toggle Arabic RTL                                   |
-| **5. Web features**   | students (list/detail/form/guardians/fees/payment dialog), classes, staff, reports + CSV, dashboard, settings (org, branding/logo upload, users invite, academic years, export)                                         | every story in Section 2 works manually                                                            |
+| **4. Web foundation** | Tailwind + shadcn, router, providers, Zustand stores, username/password auth, api client, i18n (en/ar + RTL), layout shell, RoleGate, login/change-password pages                                                                          | can log in as seeded admin, see branded shell, toggle Arabic RTL                                   |
+| **5. Web features**   | students (list/detail/form/guardians/fees/payment dialog), classes, staff, reports + CSV, dashboard, settings (org, branding/logo upload, users create/reset password, academic years, export)                                         | every story in Section 2 works manually                                                            |
 | **6. Quality & E2E**  | Playwright smoke suite, empty/loading/error states, a11y pass, Arabic translation completeness check                                                                                                                    | `pnpm test:e2e` green; no lint warnings                                                            |
-| **7. Deploy docs**    | `docs/DEPLOYMENT.md`: Supabase project setup, env vars, building web for a static host, Dockerfile for API, running migrations in prod, creating the first admin, backups                                               | a new developer can deploy from the README alone                                                   |
+| **7. Deploy docs**    | `docs/DEPLOYMENT.md`: PostgreSQL setup, env vars, building web for a static host, Dockerfile for API, running migrations in prod, creating the first admin, backups                                               | a new developer can deploy from the README alone                                                   |
 
 ---
 
@@ -340,8 +342,6 @@ Rules:
 `apps/web/.env.example`
 
 ```
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
 VITE_API_URL=http://localhost:4000/api/v1
 ```
 
@@ -351,17 +351,15 @@ VITE_API_URL=http://localhost:4000/api/v1
 NODE_ENV=development
 PORT=4000
 CORS_ORIGIN=http://localhost:5173
-DATABASE_URL=            # Supavisor pooler, transaction mode (port 6543)
-DIRECT_DATABASE_URL=     # direct connection (port 5432) for migrations
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_JWKS_URL=       # ${SUPABASE_URL}/auth/v1/.well-known/jwks.json
-SUPABASE_JWT_ISSUER=     # ${SUPABASE_URL}/auth/v1
-SEED_ADMIN_EMAIL=
+DATABASE_URL=            # PostgreSQL connection (or a transaction pooler)
+DIRECT_DATABASE_URL=     # optional direct connection for migrations
+JWT_SECRET=              # 32+ random chars; required in production
+SESSION_TTL_HOURS=12
+SEED_ADMIN_USERNAME=
 SEED_ADMIN_PASSWORD=
 ```
 
-The service-role key and database URLs must never appear in the web bundle.
+`JWT_SECRET` and database URLs must never appear in the web bundle.
 
 ---
 
