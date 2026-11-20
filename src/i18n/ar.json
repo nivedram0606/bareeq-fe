@@ -393,5 +393,9 @@
     "accountant": "محاسب",
     "administrator": "إداري",
     "other": "أخرى"
+  },
+  "pwa": {
+    "updateAvailable": "يتوفر إصدار جديد من بريق.",
+    "reload": "إعادة التحميل"
   }
 }

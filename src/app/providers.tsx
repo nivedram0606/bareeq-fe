@@ -8,6 +8,8 @@ import i18n from '@/i18n';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/auth.store';
 
+import { PwaUpdatePrompt } from './PwaUpdatePrompt';
+
 export function Providers({ children }: { children: ReactNode }) {
   const init = useAuthStore((s) => s.init);
   useEffect(() => {
@@ -19,6 +21,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         {children}
         <Toaster />
+        <PwaUpdatePrompt />
       </QueryClientProvider>
     </I18nextProvider>
   );

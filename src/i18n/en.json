@@ -393,5 +393,9 @@
     "accountant": "Accountant",
     "administrator": "Administrator",
     "other": "Other"
+  },
+  "pwa": {
+    "updateAvailable": "A new version of Bareeq is available.",
+    "reload": "Reload"
   }
 }

@@ -44,6 +44,16 @@ pnpm build
 ```
 Generates production-ready static assets in `dist/`.
 
+### Installable app (PWA)
+The app can be installed on phones, tablets and desktops ("Add to Home Screen" / the install icon
+in the address bar). A service worker caches the app's own files so it opens quickly and survives
+brief network drops; API data is never cached. When a new version is deployed, open apps show a
+**Reload** prompt (they check hourly). Configuration lives in `vite.config.ts` (`VitePWA`).
+Icons are generated from `public/pwa-icon.svg`:
+```bash
+pnpm pwa:icons
+```
+
 ### Deployment
 This frontend can be deployed directly to Netlify, Vercel, Cloudflare Pages, or any static hosting service.
 - **Build command**: `pnpm build` (or `npm run build`)
