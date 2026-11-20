@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { PAY_METHODS } from '@bareeq/shared';
 import type { FeeCollectionRow } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { MoneyText } from '@/components/MoneyText';
 import { NativeSelect } from '@/components/ui/form-controls';
@@ -23,7 +24,7 @@ const FILTERS = ['from', 'to', 'classId', 'method'] as const;
 export function FeeCollectionReportPage() {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const query = { ...values, page, pageSize: PAGE_SIZE };
   const report = useFeeCollectionReport(query);
 
@@ -107,6 +108,7 @@ export function FeeCollectionReportPage() {
               </option>
             ))}
           </NativeSelect>
+          <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
         </>
       }
     >

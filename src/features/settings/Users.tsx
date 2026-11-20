@@ -9,6 +9,7 @@ import type { z } from 'zod';
 import { createUserSchema, resetUserPasswordSchema, ROLES } from '@bareeq/shared';
 import type { ProfileDto, Role } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DataTable } from '@/components/DataTable';
 import { FormField } from '@/components/FormField';
@@ -184,7 +185,7 @@ function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClo
 export function UsersPage() {
   const { t } = useTranslation();
   const myId = useAuthStore((s) => s.profile?.id);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const users = useUsers({ ...values, page, pageSize: PAGE_SIZE });
   const update = useUpdateUser();
   const [createOpen, setCreateOpen] = useState(false);
@@ -290,12 +291,13 @@ export function UsersPage() {
           </Button>
         }
       />
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <SearchInput
           label={t('users.search')}
           value={values.search}
           onChange={(search) => setFilters({ search })}
         />
+        <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
       </div>
       <DataTable
         caption={t('users.title')}

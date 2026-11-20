@@ -36,5 +36,16 @@ export function useUrlFilters<K extends string>(keys: readonly K[]) {
     [setParams],
   );
 
-  return { values, page, setFilters };
+  /** True when any filter (not the page number) has a value. */
+  const isFiltered = keys.some((key) => values[key] !== '');
+
+  /** Removes every filter and returns to page 1. */
+  const clearFilters = useCallback(() => {
+    const patch: Partial<Record<K | 'page', string>> = {};
+    for (const key of keys) patch[key] = '';
+    setFilters(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `keys` is a constant list
+  }, [setFilters]);
+
+  return { values, page, setFilters, isFiltered, clearFilters };
 }

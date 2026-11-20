@@ -10,6 +10,7 @@ import type { z } from 'zod';
 import { createClassSchema } from '@bareeq/shared';
 import type { ClassDto } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { FormField } from '@/components/FormField';
 import { PageHeader } from '@/components/PageHeader';
@@ -121,7 +122,7 @@ function ClassDialog({
 export function ClassesPage() {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const years = useAcademicYears();
   const query = useClasses({ ...values, page, pageSize: PAGE_SIZE });
   const [dialog, setDialog] = useState<{ open: boolean; cls: ClassDto | null }>({
@@ -204,6 +205,7 @@ export function ClassesPage() {
             </option>
           ))}
         </NativeSelect>
+        <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
       </div>
       <DataTable
         caption={t('classes.title')}

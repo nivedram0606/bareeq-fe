@@ -1,9 +1,10 @@
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Input } from '@/components/ui/input';
 
-/** Search box that reports its value after the user pauses typing. */
+/** Search box that reports its value after the user pauses typing, with a × to clear it. */
 export function SearchInput({
   value,
   onChange,
@@ -15,6 +16,7 @@ export function SearchInput({
   label: string;
   delay?: number;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState(value);
   const [synced, setSynced] = useState(value);
 
@@ -42,8 +44,23 @@ export function SearchInput({
         placeholder={label}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        className="ps-9"
+        // Our own × replaces the browser's native one (Chrome/Safari only) for a consistent look.
+        className="ps-9 pe-9 [&::-webkit-search-cancel-button]:appearance-none"
       />
+      {draft ? (
+        <button
+          type="button"
+          aria-label={t('common.clearSearch')}
+          title={t('common.clearSearch')}
+          onClick={() => {
+            setDraft('');
+            onChange('');
+          }}
+          className="absolute end-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          <X aria-hidden="true" className="size-4" />
+        </button>
+      ) : null}
     </div>
   );
 }

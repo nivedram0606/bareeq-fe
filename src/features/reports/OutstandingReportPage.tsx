@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 
 import type { OutstandingRow } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { MoneyText } from '@/components/MoneyText';
 import { SearchInput } from '@/components/SearchInput';
@@ -22,7 +23,7 @@ const FILTERS = ['search', 'classId', 'dueBefore'] as const;
 export function OutstandingReportPage() {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const query = { ...values, page, pageSize: PAGE_SIZE };
   const report = useOutstandingReport(query);
 
@@ -94,6 +95,7 @@ export function OutstandingReportPage() {
             value={values.dueBefore}
             onChange={(dueBefore) => setFilters({ dueBefore })}
           />
+          <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
         </>
       }
     >

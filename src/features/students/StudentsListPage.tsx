@@ -7,6 +7,7 @@ import { Link } from 'react-router';
 import { STAFF_OR_ADMIN, STUDENT_STATUS } from '@bareeq/shared';
 import type { StudentDto } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { PageHeader } from '@/components/PageHeader';
 import { RoleGate } from '@/components/RoleGate';
@@ -26,7 +27,7 @@ const FILTERS = ['search', 'classId', 'status'] as const;
 export function StudentsListPage() {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const classes = useClassOptions();
   const query = useStudents({ ...values, page, pageSize: PAGE_SIZE });
 
@@ -128,6 +129,7 @@ export function StudentsListPage() {
             </option>
           ))}
         </NativeSelect>
+        <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
       </div>
       <DataTable
         caption={t('students.title')}

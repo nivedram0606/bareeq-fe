@@ -9,6 +9,7 @@ import type { z } from 'zod';
 import { ADMIN_ONLY, createStaffSchema, STUDENT_STATUS } from '@bareeq/shared';
 import type { StaffDto } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { FormField } from '@/components/FormField';
 import { PageHeader } from '@/components/PageHeader';
@@ -118,7 +119,7 @@ function StaffDialog({
 export function StaffPage() {
   const { t } = useTranslation();
   const isAdmin = useHasRole(ADMIN_ONLY);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const query = useStaff({ ...values, page, pageSize: PAGE_SIZE });
   const [dialog, setDialog] = useState<{ open: boolean; member: StaffDto | null }>({
     open: false,
@@ -204,6 +205,7 @@ export function StaffPage() {
             </option>
           ))}
         </NativeSelect>
+        <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
       </div>
       <DataTable
         caption={t('staff.title')}

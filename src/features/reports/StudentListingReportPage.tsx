@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { STUDENT_STATUS } from '@bareeq/shared';
 import type { StudentReportRow } from '@bareeq/shared';
 
+import { ClearFiltersButton } from '@/components/ClearFiltersButton';
 import { DataTable } from '@/components/DataTable';
 import { SearchInput } from '@/components/SearchInput';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -22,7 +23,7 @@ const FILTERS = ['search', 'classId', 'status'] as const;
 export function StudentListingReportPage() {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
-  const { values, page, setFilters } = useUrlFilters(FILTERS);
+  const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const query = { ...values, page, pageSize: PAGE_SIZE };
   const report = useStudentReport(query);
 
@@ -99,6 +100,7 @@ export function StudentListingReportPage() {
               </option>
             ))}
           </NativeSelect>
+          <ClearFiltersButton active={isFiltered} onClear={clearFilters} />
         </>
       }
     >
