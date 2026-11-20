@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-import { STUDENT_STATUS } from '../enums.js';
+import { DESIGNATIONS, STUDENT_STATUS } from '../enums.js';
 
 import { enumOf, listQuerySchema, optionalEmail, optionalText, requiredText } from './common.js';
 
 export const staffSchema = z.object({
   id: z.uuid(),
   fullName: z.string(),
-  designation: z.string(),
+  designation: z.enum(DESIGNATIONS),
   phone: z.string().nullable(),
   email: z.string().nullable(),
   status: z.enum(STUDENT_STATUS),
@@ -16,7 +16,7 @@ export type StaffDto = z.infer<typeof staffSchema>;
 
 const staffFields = z.object({
   fullName: requiredText(150),
-  designation: requiredText(100),
+  designation: enumOf(DESIGNATIONS),
   phone: optionalText(30),
   email: optionalEmail,
   status: enumOf(STUDENT_STATUS),

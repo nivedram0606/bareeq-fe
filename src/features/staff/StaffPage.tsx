@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
-import { ADMIN_ONLY, createStaffSchema, STUDENT_STATUS } from '@bareeq/shared';
+import { ADMIN_ONLY, createStaffSchema, DESIGNATIONS, STUDENT_STATUS } from '@bareeq/shared';
 import type { StaffDto } from '@bareeq/shared';
 
 import { ClearFiltersButton } from '@/components/ClearFiltersButton';
@@ -54,7 +54,8 @@ function StaffDialog({
     resolver: zodResolver(createStaffSchema),
     values: {
       fullName: member?.fullName ?? '',
-      designation: member?.designation ?? '',
+      // Left empty for a new member so the admin must choose one.
+      designation: member?.designation ?? ('' as Input_['designation']),
       phone: member?.phone ?? '',
       email: member?.email ?? '',
       status: member?.status ?? 'active',
@@ -83,7 +84,16 @@ function StaffDialog({
             <Input autoComplete="off" {...form.register('fullName')} />
           </FormField>
           <FormField label={t('staff.designation')} error={errors.designation?.message} required>
-            <Input autoComplete="off" {...form.register('designation')} />
+            <NativeSelect {...form.register('designation')}>
+              <option value="" disabled>
+                {t('staff.chooseDesignation')}
+              </option>
+              {DESIGNATIONS.map((d) => (
+                <option key={d} value={d}>
+                  {t(`designations.${d}`)}
+                </option>
+              ))}
+            </NativeSelect>
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('staff.phone')} error={errors.phone?.message}>
@@ -133,7 +143,11 @@ export function StaffPage() {
         header: t('staff.fullName'),
         cell: ({ row }) => <span className="font-medium">{row.original.fullName}</span>,
       },
-      { accessorKey: 'designation', header: t('staff.designation') },
+      {
+        accessorKey: 'designation',
+        header: t('staff.designation'),
+        cell: ({ row }) => t(`designations.${row.original.designation}`),
+      },
       {
         accessorKey: 'phone',
         header: t('staff.phone'),

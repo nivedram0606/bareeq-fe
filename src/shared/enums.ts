@@ -4,6 +4,16 @@ export type Role = (typeof ROLES)[number];
 export const STUDENT_STATUS = ['active', 'inactive'] as const;
 export type RecordStatus = (typeof STUDENT_STATUS)[number];
 
+/** Staff designations (stored as these keys; the web app translates them). */
+export const DESIGNATIONS = [
+  'teacher',
+  'principal',
+  'accountant',
+  'administrator',
+  'other',
+] as const;
+export type Designation = (typeof DESIGNATIONS)[number];
+
 export const PAY_METHODS = ['cash', 'bank_transfer', 'card', 'cheque', 'other'] as const;
 export type PayMethod = (typeof PAY_METHODS)[number];
 

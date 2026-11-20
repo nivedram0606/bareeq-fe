@@ -24,11 +24,11 @@ export const isApiError = (e: unknown): e is ApiError => e instanceof ApiError;
 
 /* The auth store registers these at startup (avoids an import cycle with the store). */
 let getToken: () => string | undefined = () => undefined;
-let onUnauthorized: () => void = () => undefined;
+let onUnauthorized: (error: ApiError) => void = () => undefined;
 
 export function configureApiAuth(options: {
   getToken: () => string | undefined;
-  onUnauthorized: () => void;
+  onUnauthorized: (error: ApiError) => void;
 }): void {
   getToken = options.getToken;
   onUnauthorized = options.onUnauthorized;
@@ -103,7 +103,7 @@ async function request(path: string, options: RequestOptions): Promise<Response>
           res.status >= 500 ? 'INTERNAL' : 'VALIDATION_ERROR',
           res.statusText,
         );
-    if (res.status === 401) onUnauthorized();
+    if (res.status === 401) onUnauthorized(error);
     throw error;
   }
   return res;

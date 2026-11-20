@@ -58,7 +58,8 @@
       "password_mismatch": "Passwords do not match.",
       "password_short": "Use at least 8 characters.",
       "expired": "Your session has ended. Please sign in again.",
-      "too_many_attempts": "Too many sign-in attempts. Wait a few minutes and try again."
+      "too_many_attempts": "Too many sign-in attempts. Wait a few minutes and try again.",
+      "signedOutElsewhere": "You were signed out because your account signed in on another device (or its password was changed)."
     },
     "username": "Username",
     "forgotHint": "Forgot your password? Ask your school administrator to reset it.",
@@ -283,7 +284,8 @@
     "title": "Staff directory",
     "subtitle": "Contact details of the school’s staff.",
     "search": "Search staff",
-    "empty": "No staff members found."
+    "empty": "No staff members found.",
+    "chooseDesignation": "Choose a designation"
   },
   "reports": {
     "exporting": "Exporting…",
@@ -384,5 +386,12 @@
     "cardBody": "One CSV file per table, UTF-8 encoded so Arabic opens correctly in Excel.",
     "preparing": "Preparing…",
     "download": "Download ZIP"
+  },
+  "designations": {
+    "teacher": "Teacher",
+    "principal": "Principal",
+    "accountant": "Accountant",
+    "administrator": "Administrator",
+    "other": "Other"
   }
 }

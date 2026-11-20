@@ -76,6 +76,10 @@ async function fetchMeWithRetry() {
   }
 }
 
+/** 401 because this account signed in on another device (one session per user) or its password changed. */
+const signedInElsewhere = (err: unknown): boolean =>
+  isApiError(err) && err.status === 401 && /signed in again|password changed/i.test(err.message);
+
 function signInError(err: unknown): string {
   if (!isApiError(err)) return 'auth.errors.generic';
   if (err.status === 401 || err.status === 400) return 'auth.errors.invalid_credentials';
@@ -119,7 +123,9 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         : err.status === 403 && /deactivated/i.test(err.message)
           ? 'auth.errors.inactive'
           : err.status === 401
-            ? 'auth.errors.expired'
+            ? signedInElsewhere(err)
+              ? 'auth.errors.signedOutElsewhere'
+              : 'auth.errors.expired'
             : err.status === 403
               ? 'auth.errors.profile'
               : 'auth.errors.generic';
@@ -141,8 +147,10 @@ export const useAuthStore = create<AuthState>()((set, get) => {
 
       configureApiAuth({
         getToken: () => get().session?.token,
-        onUnauthorized: () => {
-          if (get().session) clear();
+        onUnauthorized: (err) => {
+          if (!get().session) return;
+          clear();
+          if (signedInElsewhere(err)) set({ error: 'auth.errors.signedOutElsewhere' });
         },
       });
 
