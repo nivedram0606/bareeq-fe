@@ -21,7 +21,8 @@
     "settingsYears": "Academic years",
     "settingsExport": "Data export",
     "openMenu": "Open navigation menu",
-    "close": "Close"
+    "close": "Close",
+    "breadcrumb": "Breadcrumb"
   },
   "header": {
     "language": "Language",

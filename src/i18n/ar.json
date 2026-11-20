@@ -21,7 +21,8 @@
     "settingsYears": "الأعوام الدراسية",
     "settingsExport": "تصدير البيانات",
     "openMenu": "فتح قائمة التنقل",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "breadcrumb": "مسار التنقل"
   },
   "header": {
     "language": "اللغة",

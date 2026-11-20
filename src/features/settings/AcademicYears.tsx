@@ -33,6 +33,14 @@ type Input_ = z.input<typeof createAcademicYearSchema>;
 type Output = z.output<typeof createAcademicYearSchema>;
 const FIELDS = ['name', 'startDate', 'endDate', 'isCurrent'] as const;
 
+/** `YYYY-MM-DD` shifted by `days` (UTC, so no time-zone drift); '' stays ''. */
+function shiftDate(iso: string, days: number): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 function YearDialog({
   year,
   open,
@@ -55,6 +63,17 @@ function YearDialog({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+
+  // The end must be after the start: the pickers only offer valid days, and a pair that is
+  // still wrong (typed by hand, or the other date changed) is flagged right away, not on Save.
+  const dateField = (name: 'startDate' | 'endDate') =>
+    form.register(name, {
+      onChange: () => {
+        if (form.getValues('startDate') && form.getValues('endDate')) void form.trigger('endDate');
+      },
+    });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -78,10 +97,18 @@ function YearDialog({
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('years.startDate')} error={errors.startDate?.message} required>
-              <Input type="date" {...form.register('startDate')} />
+              <Input
+                type="date"
+                max={shiftDate(endDate, -1) || undefined}
+                {...dateField('startDate')}
+              />
             </FormField>
             <FormField label={t('years.endDate')} error={errors.endDate?.message} required>
-              <Input type="date" {...form.register('endDate')} />
+              <Input
+                type="date"
+                min={shiftDate(startDate, 1) || undefined}
+                {...dateField('endDate')}
+              />
             </FormField>
           </div>
           <label className="flex items-center gap-2 text-sm">

@@ -24,6 +24,7 @@ import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth.store';
 import { useUiStore } from '@/stores/ui.store';
 
+import { Breadcrumbs } from './Breadcrumbs';
 import { NAVIGATION } from './navigation';
 
 function SchoolIdentity() {
@@ -212,6 +213,7 @@ export function AppLayout() {
           </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto max-w-7xl p-4 outline-none md:p-6">
+          <Breadcrumbs />
           <Outlet />
         </main>
       </div>
