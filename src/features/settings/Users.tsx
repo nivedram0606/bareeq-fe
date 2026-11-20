@@ -264,13 +264,26 @@ export function UsersPage() {
         cell: ({ row }) =>
           row.original.id === myId ? null : (
             <div className="flex justify-end gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setResetting(row.original)}>
+              {/* Icon-only below desktop width so the row fits; the label stays for screen readers. */}
+              <Button
+                variant="ghost"
+                size="sm"
+                title={t('users.resetPassword')}
+                onClick={() => setResetting(row.original)}
+              >
                 <KeyRound aria-hidden="true" />
-                {t('users.resetPassword')}
+                <span className="max-lg:sr-only">{t('users.resetPassword')}</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setToggling(row.original)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                title={row.original.isActive ? t('users.deactivate') : t('users.activate')}
+                onClick={() => setToggling(row.original)}
+              >
                 <Power aria-hidden="true" />
-                {row.original.isActive ? t('users.deactivate') : t('users.activate')}
+                <span className="max-lg:sr-only">
+                  {row.original.isActive ? t('users.deactivate') : t('users.activate')}
+                </span>
               </Button>
             </div>
           ),

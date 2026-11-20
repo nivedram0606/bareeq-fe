@@ -4,7 +4,12 @@ import { cn } from '@/lib/cn';
 
 export function Table({ className, ...props }: ComponentProps<'table'>) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    // `contain: inline-size` stops a wide table from stretching its parent (grids, cards, the
+    // page) on small screens; the table scrolls sideways inside this box instead.
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto overscroll-x-contain [contain:inline-size]"
+    >
       <table
         data-slot="table"
         className={cn('w-full caption-bottom text-sm', className)}
@@ -62,7 +67,15 @@ export function TableHead({ className, ...props }: ComponentProps<'th'>) {
 }
 
 export function TableCell({ className, ...props }: ComponentProps<'td'>) {
-  return <td data-slot="table-cell" className={cn('p-3 align-middle', className)} {...props} />;
+  // Below desktop width, cells stay on one line and the table scrolls sideways instead of
+  // squeezing columns into tall, many-line rows.
+  return (
+    <td
+      data-slot="table-cell"
+      className={cn('p-3 align-middle max-lg:whitespace-nowrap', className)}
+      {...props}
+    />
+  );
 }
 
 export function TableCaption({ className, ...props }: ComponentProps<'caption'>) {

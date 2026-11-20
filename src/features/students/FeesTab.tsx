@@ -205,7 +205,7 @@ export function FeesTab({ studentId }: { studentId: string }) {
           </div>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-3 gap-4">
+          <dl className="grid gap-3 sm:grid-cols-3 sm:gap-4">
             <Amount label={t('fees.netDue')}>
               <MoneyText value={summary.netDue} />
             </Amount>
