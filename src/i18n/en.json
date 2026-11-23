@@ -133,7 +133,11 @@
     "password_short": "Use at least 8 characters.",
     "invalid_username": "Use 3–50 characters: letters, numbers, dots, dashes or underscores.",
     "username_taken": "This username is already taken.",
-    "wrong_password": "The current password is incorrect."
+    "wrong_password": "The current password is incorrect.",
+    "invalid_phone": "Enter a valid phone number (digits, spaces, + or -).",
+    "primary_phone_required": "The primary contact needs a phone number.",
+    "inactive_student_class": "Inactive students cannot be assigned to a class.",
+    "inactive_teacher": "Inactive staff cannot be assigned as class teacher."
   },
   "table": {
     "pagination": "Pagination",
@@ -199,7 +203,11 @@
     "activateBody": "The student will appear again in active lists and reports.",
     "tabProfile": "Profile",
     "tabGuardians": "Guardians",
-    "tabFees": "Fees"
+    "tabFees": "Fees",
+    "primaryContact": "Primary contact",
+    "primaryContactHint": "The parent or guardian the school contacts first. More guardians can be added later.",
+    "inactiveClassHint": "Inactive students cannot be assigned to a class. Make the student active to change the class.",
+    "editNamed": "Edit {{name}}"
   },
   "guardians": {
     "created": "Guardian added.",
@@ -269,7 +277,10 @@
     "title": "Classes",
     "search": "Search classes",
     "allYears": "All academic years",
-    "empty": "No classes yet."
+    "empty": "No classes yet.",
+    "teacher": "Class teacher",
+    "teacherHint": "Active staff members only.",
+    "noTeacher": "No class teacher"
   },
   "staff": {
     "created": "Staff member added.",
@@ -285,7 +296,8 @@
     "subtitle": "Contact details of the school’s staff.",
     "search": "Search staff",
     "empty": "No staff members found.",
-    "chooseDesignation": "Choose a designation"
+    "chooseDesignation": "Choose a designation",
+    "classes": "Classes"
   },
   "reports": {
     "exporting": "Exporting…",

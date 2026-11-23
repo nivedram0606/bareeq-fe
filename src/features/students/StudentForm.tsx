@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { z } from 'zod';
@@ -24,6 +26,9 @@ import { useCreateStudent, useStudent, useUpdateStudent } from './api';
 type Input_ = z.input<typeof createStudentSchema>;
 type Output = z.output<typeof createStudentSchema>;
 
+/** Editing doesn't touch contacts (they are managed on the Guardians tab). */
+const editStudentSchema = createStudentSchema.omit({ primaryContact: true });
+
 const FIELDS = [
   'admissionNo',
   'firstName',
@@ -34,6 +39,10 @@ const FIELDS = [
   'classId',
   'status',
   'joinedOn',
+  'primaryContact.name',
+  'primaryContact.relation',
+  'primaryContact.phone',
+  'primaryContact.email',
 ] as const;
 
 function StudentFormBody({ student }: { student?: StudentDto }) {
@@ -44,7 +53,9 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
   const update = useUpdateStudent(student?.id ?? '');
 
   const form = useForm<Input_, unknown, Output>({
-    resolver: zodResolver(createStudentSchema),
+    resolver: (student
+      ? zodResolver(editStudentSchema)
+      : zodResolver(createStudentSchema)) as Resolver<Input_, unknown, Output>,
     defaultValues: student
       ? {
           admissionNo: student.admissionNo,
@@ -57,9 +68,22 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
           status: student.status,
           joinedOn: student.joinedOn,
         }
-      : { status: 'active', joinedOn: todayIso(), classId: '', nameAr: '' },
+      : {
+          status: 'active',
+          joinedOn: todayIso(),
+          classId: '',
+          nameAr: '',
+          primaryContact: { name: '', relation: '', phone: '', email: '' },
+        },
   });
   const { errors, isSubmitting } = form.formState;
+
+  // Inactive students can't be put into a class (BUG-010): the class stays as it was.
+  const classLocked = form.watch('status') === 'inactive';
+  const lockedClassId = student?.classId ?? '';
+  useEffect(() => {
+    if (classLocked) form.setValue('classId', lockedClassId);
+  }, [classLocked, lockedClassId, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -84,15 +108,38 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
             >
               <Input autoComplete="off" dir="ltr" {...form.register('admissionNo')} />
             </FormField>
-            <FormField label={t('students.class')} error={errors.classId?.message}>
-              <NativeSelect {...form.register('classId')}>
-                <option value="">{t('students.noClass')}</option>
-                {classes.data?.data.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} · {c.academicYearName}
-                  </option>
-                ))}
-              </NativeSelect>
+            <FormField
+              label={t('students.class')}
+              error={errors.classId?.message}
+              hint={classLocked ? t('students.inactiveClassHint') : undefined}
+            >
+              {classLocked ? (
+                <>
+                  <NativeSelect disabled value={lockedClassId}>
+                    <option value="">{t('students.noClass')}</option>
+                    {classes.data?.data.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} · {c.academicYearName}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <input type="hidden" {...form.register('classId')} />
+                </>
+              ) : (
+                // Re-mount once the class list arrives so the saved class shows as selected
+                // (the options don't exist yet when the form first renders).
+                <NativeSelect
+                  key={classes.data ? 'loaded' : 'loading'}
+                  {...form.register('classId')}
+                >
+                  <option value="">{t('students.noClass')}</option>
+                  {classes.data?.data.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} · {c.academicYearName}
+                    </option>
+                  ))}
+                </NativeSelect>
+              )}
             </FormField>
             <FormField label={t('students.firstName')} error={errors.firstName?.message} required>
               <Input autoComplete="off" {...form.register('firstName')} />
@@ -133,6 +180,54 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
               <Input type="date" {...form.register('joinedOn')} />
             </FormField>
           </div>
+          {student ? null : (
+            <fieldset className="grid gap-4 rounded-lg border p-4">
+              <legend className="px-1 text-sm font-semibold">{t('students.primaryContact')}</legend>
+              <p className="-mt-2 text-sm text-muted-foreground">
+                {t('students.primaryContactHint')}
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  label={t('guardians.name')}
+                  error={errors.primaryContact?.name?.message}
+                  required
+                >
+                  <Input autoComplete="off" {...form.register('primaryContact.name')} />
+                </FormField>
+                <FormField
+                  label={t('guardians.relation')}
+                  error={errors.primaryContact?.relation?.message}
+                  required
+                >
+                  <Input autoComplete="off" {...form.register('primaryContact.relation')} />
+                </FormField>
+                <FormField
+                  label={t('guardians.phone')}
+                  error={errors.primaryContact?.phone?.message}
+                  required
+                >
+                  <Input
+                    type="tel"
+                    dir="ltr"
+                    autoComplete="off"
+                    {...form.register('primaryContact.phone')}
+                  />
+                </FormField>
+                <FormField
+                  label={t('guardians.email')}
+                  error={errors.primaryContact?.email?.message}
+                >
+                  <Input
+                    type="email"
+                    dir="ltr"
+                    autoComplete="off"
+                    {...form.register('primaryContact.email')}
+                  />
+                </FormField>
+              </div>
+            </fieldset>
+          )}
+
           <div className="flex justify-end gap-2">
             <Button asChild variant="outline">
               <Link to={cancelTo}>{t('common.cancel')}</Link>

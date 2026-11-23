@@ -149,6 +149,12 @@ export function StaffPage() {
         cell: ({ row }) => t(`designations.${row.original.designation}`),
       },
       {
+        accessorKey: 'classNames',
+        header: t('staff.classes'),
+        cell: ({ row }) =>
+          row.original.classNames.length ? row.original.classNames.join(', ') : '—',
+      },
+      {
         accessorKey: 'phone',
         header: t('staff.phone'),
         cell: ({ row }) =>

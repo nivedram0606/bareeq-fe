@@ -11,6 +11,8 @@ export const staffSchema = z.object({
   phone: z.string().nullable(),
   email: z.string().nullable(),
   status: z.enum(STUDENT_STATUS),
+  /** Classes this staff member is the class teacher of. */
+  classNames: z.array(z.string()),
 });
 export type StaffDto = z.infer<typeof staffSchema>;
 

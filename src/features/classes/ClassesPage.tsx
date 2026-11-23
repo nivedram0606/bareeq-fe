@@ -28,13 +28,14 @@ import { Input } from '@/components/ui/input';
 import { formatNumber } from '@/lib/format';
 import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
+import { useStaff } from '@/features/staff/api';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useAcademicYears, useClasses, useCreateClass, useUpdateClass } from './api';
 
 type Input_ = z.input<typeof createClassSchema>;
 type Output = z.output<typeof createClassSchema>;
-const FIELDS = ['name', 'grade', 'section', 'academicYearId'] as const;
+const FIELDS = ['name', 'grade', 'section', 'academicYearId', 'teacherId'] as const;
 const PAGE_SIZE = 20;
 const FILTERS = ['search', 'academicYearId'] as const;
 
@@ -52,6 +53,7 @@ function ClassDialog({
   const create = useCreateClass();
   const update = useUpdateClass();
   const currentYearId = years.data?.data.find((y) => y.isCurrent)?.id ?? '';
+  const teachers = useStaff({ status: 'active', pageSize: 100, sort: 'fullName' });
   const form = useForm<Input_, unknown, Output>({
     resolver: zodResolver(createClassSchema),
     values: {
@@ -59,6 +61,7 @@ function ClassDialog({
       grade: cls?.grade ?? '',
       section: cls?.section ?? '',
       academicYearId: cls?.academicYearId ?? currentYearId,
+      teacherId: cls?.teacherId ?? '',
     },
   });
   const { errors, isSubmitting } = form.formState;
@@ -101,6 +104,24 @@ function ClassDialog({
               {years.data?.data.map((y) => (
                 <option key={y.id} value={y.id}>
                   {y.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormField>
+          <FormField
+            label={t('classes.teacher')}
+            error={errors.teacherId?.message}
+            hint={t('classes.teacherHint')}
+          >
+            <NativeSelect {...form.register('teacherId')}>
+              <option value="">{t('classes.noTeacher')}</option>
+              {/* Keep a current teacher who has since become inactive selectable. */}
+              {cls?.teacherId && !teachers.data?.data.some((m) => m.id === cls.teacherId) ? (
+                <option value={cls.teacherId}>{cls.teacherName}</option>
+              ) : null}
+              {teachers.data?.data.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.fullName} · {t(`designations.${m.designation}`)}
                 </option>
               ))}
             </NativeSelect>
@@ -151,6 +172,11 @@ export function ClassesPage() {
         cell: ({ row }) => row.original.section ?? '—',
       },
       { accessorKey: 'academicYearName', header: t('classes.academicYear') },
+      {
+        accessorKey: 'teacherName',
+        header: t('classes.teacher'),
+        cell: ({ row }) => row.original.teacherName ?? '—',
+      },
       {
         accessorKey: 'studentCount',
         header: t('classes.students'),

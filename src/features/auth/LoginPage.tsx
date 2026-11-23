@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import type { z } from 'zod';
 
 import { loginSchema } from '@bareeq/shared';
@@ -21,7 +21,6 @@ type LoginOutput = z.output<typeof loginSchema>;
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const status = useAuthStore((s) => s.status);
   const signOutReason = useAuthStore((s) => s.error);
   const signIn = useAuthStore((s) => s.signIn);
@@ -32,14 +31,14 @@ export function LoginPage() {
     defaultValues: { username: '', password: '' },
   });
 
-  const from = (location.state as { from?: string } | null)?.from ?? '/';
-  if (status === 'authenticated') return <Navigate to={from} replace />;
+  // Signing in always lands on the Dashboard (BUG-012), not the page visited before sign-out.
+  if (status === 'authenticated') return <Navigate to="/" replace />;
 
   const onSubmit = form.handleSubmit(async ({ username, password }) => {
     setError(null);
     try {
       await signIn(username, password);
-      await navigate(from, { replace: true });
+      await navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'auth.errors.generic');
     }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { listQuerySchema, optionalText, requiredText, uuidSchema } from './common.js';
+import { listQuerySchema, optionalText, optionalUuid, requiredText, uuidSchema } from './common.js';
 
 export const classSchema = z.object({
   id: z.uuid(),
@@ -9,6 +9,9 @@ export const classSchema = z.object({
   section: z.string().nullable(),
   academicYearId: z.uuid(),
   academicYearName: z.string(),
+  /** Class teacher (a staff member), if one is assigned. */
+  teacherId: z.uuid().nullable(),
+  teacherName: z.string().nullable(),
   /** Number of active students in the class. */
   studentCount: z.number().int(),
 });
@@ -19,6 +22,7 @@ export const createClassSchema = z.object({
   grade: requiredText(50),
   section: optionalText(20),
   academicYearId: uuidSchema,
+  teacherId: optionalUuid,
 });
 export type CreateClassInput = z.input<typeof createClassSchema>;
 

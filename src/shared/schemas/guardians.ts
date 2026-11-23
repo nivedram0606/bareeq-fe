@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { optionalEmail, optionalText, requiredText } from './common.js';
+import { optionalEmail, optionalPhone, requiredText } from './common.js';
 
 export const guardianSchema = z.object({
   id: z.uuid(),
@@ -16,7 +16,7 @@ export type GuardianDto = z.infer<typeof guardianSchema>;
 const guardianFields = z.object({
   name: requiredText(150),
   relation: requiredText(50),
-  phone: optionalText(30),
+  phone: optionalPhone,
   email: optionalEmail,
   isPrimary: z.boolean(),
 });

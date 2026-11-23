@@ -19,6 +19,10 @@ export const V = {
   discountTooLarge: 'validation.discount_too_large',
   passwordShort: 'validation.password_short',
   invalidUsername: 'validation.invalid_username',
+  invalidPhone: 'validation.invalid_phone',
+  primaryPhoneRequired: 'validation.primary_phone_required',
+  inactiveStudentClass: 'validation.inactive_student_class',
+  inactiveTeacher: 'validation.inactive_teacher',
 } as const;
 
 export const uuidSchema = z.uuid({ error: V.invalidId });
@@ -62,6 +66,24 @@ export const optionalEmail = z
   .nullish()
   .transform((v) => (v ? v : null))
   .pipe(emailSchema.nullable());
+
+/** Phone number: optional leading +, then 7–20 digits, spaces, dashes or parentheses. */
+const PHONE = /^\+?[0-9][0-9 ()-]{6,19}$/;
+
+/** Required, trimmed phone number. */
+export const phoneSchema = z
+  .string({ error: V.required })
+  .trim()
+  .min(1, { error: V.required })
+  .regex(PHONE, { error: V.invalidPhone });
+
+/** Optional phone number; empty string becomes `null`. */
+export const optionalPhone = z
+  .string()
+  .trim()
+  .nullish()
+  .transform((v) => (v ? v : null))
+  .pipe(z.string().regex(PHONE, { error: V.invalidPhone }).nullable());
 
 /** ISO calendar date `YYYY-MM-DD`. */
 export const dateString = z.iso.date({ error: V.invalidDate });

@@ -6,8 +6,10 @@ import {
   dateString,
   enumOf,
   listQuerySchema,
+  optionalEmail,
   optionalText,
   optionalUuid,
+  phoneSchema,
   requiredText,
   uuidSchema,
 } from './common.js';
@@ -42,8 +44,18 @@ const studentFields = z.object({
   joinedOn: dateString,
 });
 
+/** The student's main contact person; saved as their primary guardian. */
+export const primaryContactSchema = z.object({
+  name: requiredText(150),
+  relation: requiredText(50),
+  phone: phoneSchema,
+  email: optionalEmail,
+});
+export type PrimaryContactInput = z.input<typeof primaryContactSchema>;
+
 export const createStudentSchema = studentFields.extend({
   status: enumOf(STUDENT_STATUS).default('active'),
+  primaryContact: primaryContactSchema,
 });
 export type CreateStudentInput = z.input<typeof createStudentSchema>;
 

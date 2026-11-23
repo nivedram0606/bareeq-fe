@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { RoleGate } from '@/components/RoleGate';
 import { SearchInput } from '@/components/SearchInput';
 import { StatusBadge } from '@/components/StatusBadge';
+import { useHasRole } from '@/components/useHasRole';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/form-controls';
 import { useClassOptions } from '@/features/classes/api';
@@ -30,6 +31,7 @@ export function StudentsListPage() {
   const { values, page, setFilters, isFiltered, clearFilters } = useUrlFilters(FILTERS);
   const classes = useClassOptions();
   const query = useStudents({ ...values, page, pageSize: PAGE_SIZE });
+  const canEdit = useHasRole(STAFF_OR_ADMIN);
 
   const columns = useMemo<ColumnDef<StudentDto, unknown>[]>(
     () => [
@@ -78,8 +80,30 @@ export function StudentsListPage() {
             '—'
           ),
       },
+      ...(canEdit
+        ? [
+            {
+              id: 'actions',
+              header: () => <span className="sr-only">{t('common.actions')}</span>,
+              meta: { className: 'text-end' },
+              cell: ({ row }) => (
+                <Button asChild variant="ghost" size="sm">
+                  <Link
+                    to={`/students/${row.original.id}/edit`}
+                    aria-label={t('students.editNamed', {
+                      name: `${row.original.firstName} ${row.original.lastName}`,
+                    })}
+                  >
+                    <Pencil aria-hidden="true" />
+                    <span className="max-lg:sr-only">{t('common.edit')}</span>
+                  </Link>
+                </Button>
+              ),
+            } satisfies ColumnDef<StudentDto, unknown>,
+          ]
+        : []),
     ],
-    [t, locale],
+    [t, locale, canEdit],
   );
 
   return (
