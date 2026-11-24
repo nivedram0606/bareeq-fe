@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { useAcademicYears } from '@/features/classes/api';
 import { formatDate } from '@/lib/format';
 import { applyServerErrors } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useCreateAcademicYear, useUpdateAcademicYear } from './api';
@@ -87,7 +88,7 @@ function YearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="year-form">
         <DialogHeader>
           <DialogTitle>{year ? t('years.edit') : t('years.new')}</DialogTitle>
         </DialogHeader>
@@ -112,14 +113,18 @@ function YearDialog({
             </FormField>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <Checkbox {...form.register('isCurrent')} />
+            <Checkbox data-testid="year-form-isCurrent" {...form.register('isCurrent')} />
             {t('years.isCurrent')}
           </label>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="year-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="year-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
@@ -161,7 +166,7 @@ export function AcademicYearsPage() {
         header: t('years.current'),
         cell: ({ row }) =>
           row.original.isCurrent ? (
-            <Badge variant="success">
+            <Badge variant="success" data-testid={`years-row-${row.original.id}-current-badge`}>
               <CheckCircle2 aria-hidden="true" />
               {t('years.current')}
             </Badge>
@@ -170,6 +175,7 @@ export function AcademicYearsPage() {
               variant="outline"
               size="sm"
               disabled={update.isPending}
+              data-testid={`years-row-${row.original.id}-set-current`}
               onClick={() => update.mutate({ id: row.original.id, body: { isCurrent: true } })}
             >
               {t('years.setCurrent')}
@@ -185,6 +191,7 @@ export function AcademicYearsPage() {
             variant="ghost"
             size="sm"
             onClick={() => setDialog({ open: true, year: row.original })}
+            data-testid={`years-row-${row.original.id}-edit`}
           >
             <Pencil aria-hidden="true" />
             {t('common.edit')}
@@ -196,12 +203,12 @@ export function AcademicYearsPage() {
   );
 
   return (
-    <>
+    <TestIdScope id="years">
       <PageHeader
         title={t('years.title')}
         description={t('years.subtitle')}
         actions={
-          <Button onClick={() => setDialog({ open: true, year: null })}>
+          <Button onClick={() => setDialog({ open: true, year: null })} data-testid="years-new">
             <Plus aria-hidden="true" />
             {t('years.new')}
           </Button>
@@ -223,6 +230,6 @@ export function AcademicYearsPage() {
         open={dialog.open}
         onOpenChange={(open) => setDialog((s) => ({ ...s, open }))}
       />
-    </>
+    </TestIdScope>
   );
 }

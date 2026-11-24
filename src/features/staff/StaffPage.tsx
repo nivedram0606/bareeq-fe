@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { useHasRole } from '@/components/useHasRole';
 import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
+import { TestIdScope } from '@/lib/testId';
 
 import { useCreateStaff, useStaff, useUpdateStaff } from './api';
 
@@ -75,7 +76,7 @@ function StaffDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="staff-form">
         <DialogHeader>
           <DialogTitle>{member ? t('staff.edit') : t('staff.new')}</DialogTitle>
         </DialogHeader>
@@ -113,10 +114,14 @@ function StaffDialog({
             </NativeSelect>
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="staff-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="staff-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
@@ -182,6 +187,7 @@ export function StaffPage() {
             variant="ghost"
             size="sm"
             onClick={() => setDialog({ open: true, member: row.original })}
+            data-testid={`staff-row-${row.original.id}-edit`}
           >
             <Pencil aria-hidden="true" />
             {t('common.edit')}
@@ -193,13 +199,13 @@ export function StaffPage() {
   }, [t, isAdmin]);
 
   return (
-    <>
+    <TestIdScope id="staff">
       <PageHeader
         title={t('staff.title')}
         description={t('staff.subtitle')}
         actions={
           <RoleGate roles={ADMIN_ONLY}>
-            <Button onClick={() => setDialog({ open: true, member: null })}>
+            <Button onClick={() => setDialog({ open: true, member: null })} data-testid="staff-new">
               <Plus aria-hidden="true" />
               {t('staff.new')}
             </Button>
@@ -214,6 +220,7 @@ export function StaffPage() {
         />
         <NativeSelect
           aria-label={t('staff.status')}
+          data-testid="staff-filter-status"
           className="w-full sm:w-40"
           value={values.status}
           onChange={(e) => setFilters({ status: e.target.value })}
@@ -249,6 +256,6 @@ export function StaffPage() {
         open={dialog.open}
         onOpenChange={(open) => setDialog((s) => ({ ...s, open }))}
       />
-    </>
+    </TestIdScope>
   );
 }

@@ -55,7 +55,11 @@ export function Alert({
 
 export function Spinner({ className, label }: { className?: string; label: string }) {
   return (
-    <span role="status" className={cn('inline-flex items-center gap-2', className)}>
+    <span
+      role="status"
+      data-testid="loading-spinner"
+      className={cn('inline-flex items-center gap-2', className)}
+    >
       <span
         aria-hidden="true"
         className="size-5 animate-spin rounded-full border-2 border-muted border-t-primary"

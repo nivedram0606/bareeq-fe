@@ -29,6 +29,7 @@ import { formatNumber } from '@/lib/format';
 import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { useStaff } from '@/features/staff/api';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useAcademicYears, useClasses, useCreateClass, useUpdateClass } from './api';
@@ -78,7 +79,7 @@ function ClassDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="class-form">
         <DialogHeader>
           <DialogTitle>{cls ? t('classes.edit') : t('classes.new')}</DialogTitle>
         </DialogHeader>
@@ -127,10 +128,14 @@ function ClassDialog({
             </NativeSelect>
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="class-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="class-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
@@ -159,6 +164,7 @@ export function ClassesPage() {
         cell: ({ row }) => (
           <Link
             to={`/students?classId=${row.original.id}`}
+            data-testid={`classes-row-${row.original.id}-students`}
             className="font-medium text-primary hover:underline"
           >
             {row.original.name}
@@ -191,6 +197,7 @@ export function ClassesPage() {
             variant="ghost"
             size="sm"
             onClick={() => setDialog({ open: true, cls: row.original })}
+            data-testid={`classes-row-${row.original.id}-edit`}
           >
             <Pencil aria-hidden="true" />
             {t('common.edit')}
@@ -202,11 +209,11 @@ export function ClassesPage() {
   );
 
   return (
-    <>
+    <TestIdScope id="classes">
       <PageHeader
         title={t('classes.title')}
         actions={
-          <Button onClick={() => setDialog({ open: true, cls: null })}>
+          <Button onClick={() => setDialog({ open: true, cls: null })} data-testid="classes-new">
             <Plus aria-hidden="true" />
             {t('classes.new')}
           </Button>
@@ -220,6 +227,7 @@ export function ClassesPage() {
         />
         <NativeSelect
           aria-label={t('classes.academicYear')}
+          data-testid="classes-filter-academic-year"
           className="w-full sm:w-52"
           value={values.academicYearId}
           onChange={(e) => setFilters({ academicYearId: e.target.value })}
@@ -255,6 +263,6 @@ export function ClassesPage() {
         open={dialog.open}
         onOpenChange={(open) => setDialog((s) => ({ ...s, open }))}
       />
-    </>
+    </TestIdScope>
   );
 }

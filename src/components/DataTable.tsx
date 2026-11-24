@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
+import { useTestId } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 export interface PaginationState {
@@ -67,6 +68,7 @@ export function DataTable<T>({
   caption?: string;
 }) {
   const { t } = useTranslation();
+  const tid = useTestId();
   const locale = useUiStore((s) => s.locale);
   // TanStack Table v8 is not React-Compiler-memoizable; the compiler skips this component.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -85,13 +87,17 @@ export function DataTable<T>({
   return (
     <div className="grid gap-3">
       <div className="rounded-lg border bg-card">
-        <Table aria-busy={isPending}>
+        <Table aria-busy={isPending} data-testid={tid('table')}>
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <TableHeader>
             {table.getHeaderGroups().map((group) => (
               <TableRow key={group.id} className="hover:bg-transparent">
                 {group.headers.map((header) => (
-                  <TableHead key={header.id} className={header.column.columnDef.meta?.className}>
+                  <TableHead
+                    key={header.id}
+                    className={header.column.columnDef.meta?.className}
+                    data-testid={tid('col', header.column.id)}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -103,7 +109,11 @@ export function DataTable<T>({
           <TableBody>
             {isPending ? (
               Array.from({ length: 5 }, (_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
+                <TableRow
+                  key={i}
+                  className="hover:bg-transparent"
+                  data-testid={tid('loading-row', i)}
+                >
                   {columns.map((_c, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-5 w-full max-w-40" />
@@ -119,9 +129,17 @@ export function DataTable<T>({
               </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className={rowClassName?.(row.original)}>
+                <TableRow
+                  key={row.id}
+                  className={rowClassName?.(row.original)}
+                  data-testid={tid('row', row.id)}
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
+                    <TableCell
+                      key={cell.id}
+                      className={cell.column.columnDef.meta?.className}
+                      data-testid={tid('row', row.id, cell.column.id)}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -130,7 +148,7 @@ export function DataTable<T>({
             )}
           </TableBody>
           {footer && !isPending && (data?.length ?? 0) > 0 ? (
-            <TableFooter>{footer}</TableFooter>
+            <TableFooter data-testid={tid('footer')}>{footer}</TableFooter>
           ) : null}
         </Table>
       </div>
@@ -138,9 +156,10 @@ export function DataTable<T>({
       {pagination && pagination.total > 0 ? (
         <nav
           aria-label={t('table.pagination')}
+          data-testid={tid('pagination')}
           className={cn('flex flex-wrap items-center justify-between gap-2 text-sm')}
         >
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground" data-testid={tid('pagination-summary')}>
             {t('table.summary', {
               from: formatNumber((pagination.page - 1) * pagination.pageSize + 1, locale),
               to: formatNumber(
@@ -155,12 +174,13 @@ export function DataTable<T>({
               variant="outline"
               size="sm"
               disabled={pagination.page <= 1}
+              data-testid={tid('pagination-previous')}
               onClick={() => pagination.onPageChange(pagination.page - 1)}
             >
               <ChevronLeft aria-hidden="true" className="rtl:rotate-180" />
               {t('table.previous')}
             </Button>
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground" data-testid={tid('pagination-page')}>
               {t('table.page', {
                 page: formatNumber(pagination.page, locale),
                 pages: formatNumber(pageCount, locale),
@@ -170,6 +190,7 @@ export function DataTable<T>({
               variant="outline"
               size="sm"
               disabled={pagination.page >= pageCount}
+              data-testid={tid('pagination-next')}
               onClick={() => pagination.onPageChange(pagination.page + 1)}
             >
               {t('table.next')}

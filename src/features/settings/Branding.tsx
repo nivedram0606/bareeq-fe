@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/misc';
 import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor, foregroundFor } from '@/lib/brand';
 import { toastError } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { schoolName, useOrg, useUpdateOrg, useUploadLogo } from './api';
@@ -43,7 +44,7 @@ function LogoCard({ org }: { org: OrgDto }) {
   };
 
   return (
-    <Card>
+    <Card data-testid="settings-branding-logo">
       <CardHeader>
         <CardTitle>{t('settings.logo')}</CardTitle>
         <CardDescription>{t('settings.logoHint')}</CardDescription>
@@ -55,6 +56,7 @@ function LogoCard({ org }: { org: OrgDto }) {
               src={apiAssetUrl(org.logoUrl)}
               alt={t('settings.logoAlt', { school: schoolName(org, locale) })}
               className="size-full object-contain"
+              data-testid="settings-branding-logo-image"
             />
           ) : (
             <ImageUp className="size-8 text-muted-foreground" aria-hidden="true" />
@@ -65,6 +67,7 @@ function LogoCard({ org }: { org: OrgDto }) {
           <Input
             id={inputId}
             type="file"
+            data-testid="settings-branding-logo-input"
             accept={LOGO_MIME_TYPES.join(',')}
             disabled={upload.isPending}
             aria-invalid={error ? true : undefined}
@@ -74,10 +77,19 @@ function LogoCard({ org }: { org: OrgDto }) {
             }}
           />
           {upload.isPending ? (
-            <p className="text-sm text-muted-foreground">{t('settings.uploading')}</p>
+            <p
+              className="text-sm text-muted-foreground"
+              data-testid="settings-branding-logo-uploading"
+            >
+              {t('settings.uploading')}
+            </p>
           ) : null}
           {error ? (
-            <p role="alert" className="text-xs font-medium text-destructive">
+            <p
+              role="alert"
+              className="text-xs font-medium text-destructive"
+              data-testid="settings-branding-logo-error"
+            >
               {t(error)}
             </p>
           ) : null}
@@ -100,7 +112,7 @@ function ColorCard({ org }: { org: OrgDto }) {
   useEffect(() => () => applyBrandColor(org.brandColor), [org.brandColor]);
 
   return (
-    <Card>
+    <Card data-testid="settings-branding-color">
       <CardHeader>
         <CardTitle>{t('settings.brandColor')}</CardTitle>
         <CardDescription>{t('settings.brandColorHint')}</CardDescription>
@@ -112,6 +124,7 @@ function ColorCard({ org }: { org: OrgDto }) {
             <input
               id="brand-color-picker"
               type="color"
+              data-testid="settings-branding-color-picker"
               value={valid ? color : org.brandColor}
               onChange={(e) => setColor(e.target.value)}
               className="h-9 w-16 cursor-pointer rounded-md border border-input bg-card p-1"
@@ -121,6 +134,7 @@ function ColorCard({ org }: { org: OrgDto }) {
             <Label htmlFor="brand-color-hex">{t('settings.hexColor')}</Label>
             <Input
               id="brand-color-hex"
+              data-testid="settings-branding-color-hex"
               dir="ltr"
               className="w-32"
               value={color}
@@ -130,19 +144,25 @@ function ColorCard({ org }: { org: OrgDto }) {
           </div>
           <span
             className="rounded-md px-3 py-2 text-sm font-medium"
+            data-testid="settings-branding-color-preview"
             style={valid ? { background: color, color: foregroundFor(color) } : undefined}
           >
             {t('settings.preview')}
           </span>
         </div>
         {!valid ? (
-          <p role="alert" className="text-xs font-medium text-destructive">
+          <p
+            role="alert"
+            className="text-xs font-medium text-destructive"
+            data-testid="settings-branding-color-error"
+          >
             {t('validation.invalid_color')}
           </p>
         ) : null}
         <div className="flex justify-end">
           <Button
             disabled={!valid || update.isPending || color.toLowerCase() === org.brandColor}
+            data-testid="settings-branding-color-submit"
             onClick={() => update.mutate({ brandColor: color }, { onError: toastError })}
           >
             {update.isPending ? t('common.saving') : t('common.save')}
@@ -157,21 +177,23 @@ export function BrandingPage() {
   const { t } = useTranslation();
   const org = useOrg();
   return (
-    <div className="mx-auto grid max-w-2xl gap-4">
-      <PageHeader
-        title={t('settings.brandingTitle')}
-        description={t('settings.brandingSubtitle')}
-      />
-      {org.isPending ? (
-        <Skeleton className="h-64 rounded-xl" />
-      ) : org.isError ? (
-        <ErrorState error={org.error} onRetry={() => void org.refetch()} />
-      ) : (
-        <>
-          <LogoCard org={org.data} />
-          <ColorCard org={org.data} />
-        </>
-      )}
-    </div>
+    <TestIdScope id="settings-branding">
+      <div className="mx-auto grid max-w-2xl gap-4">
+        <PageHeader
+          title={t('settings.brandingTitle')}
+          description={t('settings.brandingSubtitle')}
+        />
+        {org.isPending ? (
+          <Skeleton className="h-64 rounded-xl" />
+        ) : org.isError ? (
+          <ErrorState error={org.error} onRetry={() => void org.refetch()} />
+        ) : (
+          <>
+            <LogoCard org={org.data} />
+            <ColorCard org={org.data} />
+          </>
+        )}
+      </div>
+    </TestIdScope>
   );
 }

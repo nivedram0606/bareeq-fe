@@ -20,9 +20,15 @@ export function RouteErrorPage() {
       className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-3 p-6 text-center"
     >
       <AlertTriangle className="size-10 text-warning" aria-hidden="true" />
-      <h1 className="text-xl font-semibold">{t('common.crashTitle')}</h1>
-      <p className="text-sm text-muted-foreground">{t('common.crashBody')}</p>
-      <Button onClick={() => window.location.reload()}>{t('common.reload')}</Button>
+      <h1 className="text-xl font-semibold" data-testid="crash-heading">
+        {t('common.crashTitle')}
+      </h1>
+      <p className="text-sm text-muted-foreground" data-testid="crash-body">
+        {t('common.crashBody')}
+      </p>
+      <Button onClick={() => window.location.reload()} data-testid="crash-reload">
+        {t('common.reload')}
+      </Button>
     </div>
   );
 }

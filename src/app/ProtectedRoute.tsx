@@ -15,10 +15,16 @@ export function ForbiddenPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
       <ShieldAlert className="size-10 text-muted-foreground" aria-hidden="true" />
-      <h1 className="text-xl font-semibold">{t('common.forbiddenTitle')}</h1>
-      <p className="text-sm text-muted-foreground">{t('common.forbiddenBody')}</p>
+      <h1 className="text-xl font-semibold" data-testid="forbidden-heading">
+        {t('common.forbiddenTitle')}
+      </h1>
+      <p className="text-sm text-muted-foreground" data-testid="forbidden-body">
+        {t('common.forbiddenBody')}
+      </p>
       <Button asChild variant="outline">
-        <Link to="/">{t('common.goHome')}</Link>
+        <Link to="/" data-testid="forbidden-go-home">
+          {t('common.goHome')}
+        </Link>
       </Button>
     </div>
   );

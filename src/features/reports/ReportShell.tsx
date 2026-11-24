@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/form-controls';
 import { useClassOptions } from '@/features/classes/api';
 import type { QueryParams } from '@/lib/api';
+import { TestIdScope, useTestId } from '@/lib/testId';
 
 import { useExportCsv } from './api';
 
@@ -30,8 +31,9 @@ export function ReportShell({
 }) {
   const { t } = useTranslation();
   const exportCsv = useExportCsv(name);
+  const scope = `report-${name}`;
   return (
-    <>
+    <TestIdScope id={scope}>
       <PageHeader
         title={title}
         description={description}
@@ -39,6 +41,7 @@ export function ReportShell({
           <Button
             variant="outline"
             disabled={exportCsv.isPending}
+            data-testid={`${scope}-export`}
             onClick={() => exportCsv.mutate(query)}
           >
             <Download aria-hidden="true" />
@@ -46,18 +49,22 @@ export function ReportShell({
           </Button>
         }
       />
-      <div className="mb-4 flex flex-wrap items-end gap-3">{filters}</div>
+      <div className="mb-4 flex flex-wrap items-end gap-3" data-testid={`${scope}-filters`}>
+        {filters}
+      </div>
       {children}
-    </>
+    </TestIdScope>
   );
 }
 
 export function ClassFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { t } = useTranslation();
   const classes = useClassOptions();
+  const tid = useTestId();
   return (
     <NativeSelect
       aria-label={t('students.filterClass')}
+      data-testid={tid('filter-class')}
       className="w-full sm:w-52"
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -74,18 +81,23 @@ export function ClassFilter({ value, onChange }: { value: string; onChange: (v: 
 
 export function DateFilter({
   label,
+  field,
   value,
   onChange,
 }: {
   label: string;
+  /** Filter key, used in the test ID `<scope>-filter-<field>`. */
+  field: string;
   value: string;
   onChange: (v: string) => void;
 }) {
+  const tid = useTestId();
   return (
     <label className="grid gap-1 text-xs font-medium text-muted-foreground">
       {label}
       <input
         type="date"
+        data-testid={tid('filter', field)}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="h-9 rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"

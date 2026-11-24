@@ -67,7 +67,7 @@ export function PaymentForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="payment-form">
         <DialogHeader>
           <DialogTitle>{t('payments.record')}</DialogTitle>
           {fee ? (
@@ -104,10 +104,14 @@ export function PaymentForm({
             <Input autoComplete="off" dir="ltr" {...form.register('reference')} />
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="payment-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="payment-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('payments.save')}
             </Button>
           </DialogFooter>

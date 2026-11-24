@@ -36,6 +36,7 @@ export function OutstandingReportPage() {
           <Link
             to={`/students/${row.original.studentId}?tab=fees`}
             className="font-medium text-primary hover:underline"
+            data-testid={`report-outstanding-row-${row.id}-student`}
           >
             {row.original.studentName}
           </Link>
@@ -91,6 +92,7 @@ export function OutstandingReportPage() {
           />
           <ClassFilter value={values.classId} onChange={(classId) => setFilters({ classId })} />
           <DateFilter
+            field="dueBefore"
             label={t('reports.dueBefore')}
             value={values.dueBefore}
             onChange={(dueBefore) => setFilters({ dueBefore })}
@@ -113,7 +115,7 @@ export function OutstandingReportPage() {
           report.data ? (
             <TableRow>
               <TableCell colSpan={5}>{t('reports.totalOutstanding')}</TableCell>
-              <TableCell className="text-end" data-testid="report-total">
+              <TableCell className="text-end" data-testid="report-outstanding-total">
                 <MoneyText value={report.data.totals.outstanding} />
               </TableCell>
               <TableCell />

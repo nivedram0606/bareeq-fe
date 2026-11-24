@@ -4,8 +4,11 @@ import { useTranslation } from 'react-i18next';
 
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/cn';
+import { useTestId } from '@/lib/testId';
 
 interface ControlProps {
+  name?: string;
+  'data-testid'?: string;
   id?: string;
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
@@ -21,6 +24,7 @@ export function FormField({
   hint,
   required,
   className,
+  testId,
   children,
 }: {
   label: ReactNode;
@@ -28,9 +32,16 @@ export function FormField({
   hint?: ReactNode;
   required?: boolean;
   className?: string;
+  /** Overrides the test ID, which is otherwise `<scope>-<control name>`. */
+  testId?: string;
   children: ReactElement<ControlProps>;
 }) {
   const { t } = useTranslation();
+  const tid = useTestId();
+  const controlTestId =
+    testId ??
+    children.props['data-testid'] ??
+    (children.props.name ? tid(children.props.name) : undefined);
   const id = useId();
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
@@ -49,14 +60,23 @@ export function FormField({
         id,
         'aria-invalid': error ? true : undefined,
         'aria-describedby': describedBy || undefined,
+        'data-testid': controlTestId,
       })}
       {hint ? (
-        <p id={hintId} className="text-xs text-muted-foreground">
+        <p
+          id={hintId}
+          className="text-xs text-muted-foreground"
+          data-testid={controlTestId && `${controlTestId}-hint`}
+        >
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="text-xs font-medium text-destructive">
+        <p
+          id={errorId}
+          className="text-xs font-medium text-destructive"
+          data-testid={controlTestId && `${controlTestId}-error`}
+        >
           {t(error, { defaultValue: t('validation.invalid') })}
         </p>
       ) : null}

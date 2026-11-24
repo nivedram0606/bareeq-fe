@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table';
 import { schoolName, useOrg } from '@/features/settings/api';
 import { formatDate, formatNumber } from '@/lib/format';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useDashboard } from './api';
@@ -26,20 +27,24 @@ import { useDashboard } from './api';
 function Kpi({
   label,
   icon: Icon,
+  testId,
   children,
 }: {
   label: string;
   icon: LucideIcon;
+  testId: string;
   children: ReactNode;
 }) {
   return (
-    <Card className="gap-2">
+    <Card className="gap-2" data-testid={testId}>
       <CardHeader className="flex flex-row items-center justify-between">
         <h2 className="text-sm font-medium text-muted-foreground">{label}</h2>
         <Icon className="size-5 text-primary" aria-hidden="true" />
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold">{children}</p>
+        <p className="text-2xl font-semibold" data-testid={`${testId}-value`}>
+          {children}
+        </p>
       </CardContent>
     </Card>
   );
@@ -52,7 +57,7 @@ export function DashboardPage() {
   const { data, isPending, isError, error, refetch } = useDashboard();
 
   return (
-    <>
+    <TestIdScope id="dashboard">
       <PageHeader
         title={t('dashboard.title')}
         description={org ? t('dashboard.subtitle', { school: schoolName(org, locale) }) : undefined}
@@ -66,20 +71,32 @@ export function DashboardPage() {
               [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)
             ) : (
               <>
-                <Kpi label={t('dashboard.activeStudents')} icon={GraduationCap}>
+                <Kpi
+                  label={t('dashboard.activeStudents')}
+                  icon={GraduationCap}
+                  testId="dashboard-kpi-active-students"
+                >
                   {formatNumber(data.activeStudents, locale)}
                 </Kpi>
-                <Kpi label={t('dashboard.collectedThisMonth')} icon={Banknote}>
+                <Kpi
+                  label={t('dashboard.collectedThisMonth')}
+                  icon={Banknote}
+                  testId="dashboard-kpi-collected-this-month"
+                >
                   <MoneyText value={data.collectedThisMonth} />
                 </Kpi>
-                <Kpi label={t('dashboard.totalOutstanding')} icon={Wallet}>
+                <Kpi
+                  label={t('dashboard.totalOutstanding')}
+                  icon={Wallet}
+                  testId="dashboard-kpi-total-outstanding"
+                >
                   <MoneyText value={data.totalOutstanding} />
                 </Kpi>
               </>
             )}
           </div>
 
-          <Card>
+          <Card data-testid="dashboard-recent-payments">
             <CardHeader>
               <CardTitle>{t('dashboard.recentPayments')}</CardTitle>
             </CardHeader>
@@ -93,7 +110,7 @@ export function DashboardPage() {
               ) : data.recentPayments.length === 0 ? (
                 <EmptyState message={t('dashboard.noPayments')} />
               ) : (
-                <Table>
+                <Table data-testid="dashboard-recent-payments-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('dashboard.date')}</TableHead>
@@ -105,13 +122,18 @@ export function DashboardPage() {
                   </TableHeader>
                   <TableBody>
                     {data.recentPayments.map((p) => (
-                      <TableRow key={p.id} className={p.voidedAt ? 'text-muted-foreground' : ''}>
+                      <TableRow
+                        key={p.id}
+                        className={p.voidedAt ? 'text-muted-foreground' : ''}
+                        data-testid={`dashboard-payment-row-${p.id}`}
+                      >
                         <TableCell className="whitespace-nowrap">
                           {formatDate(p.paidOn, locale)}
                         </TableCell>
                         <TableCell>
                           <Link
                             to={`/students/${p.studentId}`}
+                            data-testid={`dashboard-payment-row-${p.id}-student`}
                             className="font-medium text-primary hover:underline"
                           >
                             {p.studentName}
@@ -134,6 +156,6 @@ export function DashboardPage() {
           </Card>
         </div>
       )}
-    </>
+    </TestIdScope>
   );
 }

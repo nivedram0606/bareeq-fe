@@ -70,7 +70,7 @@ export function FeeItemForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="fee-form">
         <DialogHeader>
           <DialogTitle>{fee ? t('fees.edit') : t('fees.add')}</DialogTitle>
           <DialogDescription>{t('fees.formHint')}</DialogDescription>
@@ -113,10 +113,14 @@ export function FeeItemForm({
             <Input type="date" {...form.register('dueDate')} />
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="fee-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="fee-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>

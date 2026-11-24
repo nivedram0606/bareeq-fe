@@ -41,6 +41,7 @@ export function StudentListingReportPage() {
           <Link
             to={`/students/${row.original.studentId}`}
             className="font-medium text-primary hover:underline"
+            data-testid={`report-students-row-${row.id}-student`}
           >
             {locale === 'ar' && row.original.nameAr
               ? row.original.nameAr
@@ -89,6 +90,7 @@ export function StudentListingReportPage() {
           <ClassFilter value={values.classId} onChange={(classId) => setFilters({ classId })} />
           <NativeSelect
             aria-label={t('students.filterStatus')}
+            data-testid="report-students-filter-status"
             className="w-full sm:w-40"
             value={values.status}
             onChange={(e) => setFilters({ status: e.target.value })}

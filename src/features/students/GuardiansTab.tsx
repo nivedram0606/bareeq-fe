@@ -25,6 +25,7 @@ import { Badge, Checkbox } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/misc';
 import { applyServerErrors, toastError } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 
 import { useCreateGuardian, useDeleteGuardian, useGuardians, useUpdateGuardian } from './api';
 
@@ -75,7 +76,7 @@ function GuardianDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="guardian-form">
         <DialogHeader>
           <DialogTitle>{guardian ? t('guardians.edit') : t('guardians.add')}</DialogTitle>
         </DialogHeader>
@@ -93,18 +94,24 @@ function GuardianDialog({
             <Input type="email" dir="ltr" autoComplete="off" {...form.register('email')} />
           </FormField>
           {guardian?.isPrimary ? (
-            <p className="text-sm text-muted-foreground">{t('guardians.isPrimaryNote')}</p>
+            <p className="text-sm text-muted-foreground" data-testid="guardian-form-primary-note">
+              {t('guardians.isPrimaryNote')}
+            </p>
           ) : (
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox {...form.register('isPrimary')} />
+              <Checkbox data-testid="guardian-form-isPrimary" {...form.register('isPrimary')} />
               {t('guardians.isPrimary')}
             </label>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="guardian-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} data-testid="guardian-form-submit">
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
@@ -137,18 +144,25 @@ export function GuardiansTab({ studentId }: { studentId: string }) {
     content = <EmptyState message={t('guardians.empty')} />;
   } else {
     content = (
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid gap-3 md:grid-cols-2" data-testid="student-guardians-list">
         {guardians.data.map((g) => (
-          <li key={g.id}>
+          <li key={g.id} data-testid={`student-guardians-${g.id}`}>
             <Card className="h-full gap-2 py-4">
               <CardContent className="grid gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{g.name}</p>
-                    <p className="text-sm text-muted-foreground">{g.relation}</p>
+                    <p className="font-medium" data-testid={`student-guardians-${g.id}-name`}>
+                      {g.name}
+                    </p>
+                    <p
+                      className="text-sm text-muted-foreground"
+                      data-testid={`student-guardians-${g.id}-relation`}
+                    >
+                      {g.relation}
+                    </p>
                   </div>
                   {g.isPrimary ? (
-                    <Badge variant="success">
+                    <Badge variant="success" data-testid={`student-guardians-${g.id}-primary`}>
                       <Star aria-hidden="true" />
                       {t('guardians.primary')}
                     </Badge>
@@ -157,16 +171,28 @@ export function GuardiansTab({ studentId }: { studentId: string }) {
                 <dl className="grid gap-1 text-sm">
                   <div className="flex gap-2">
                     <dt className="text-muted-foreground">{t('guardians.phone')}:</dt>
-                    <dd className="ltr-nums">{g.phone ?? '—'}</dd>
+                    <dd className="ltr-nums" data-testid={`student-guardians-${g.id}-phone`}>
+                      {g.phone ?? '—'}
+                    </dd>
                   </div>
                   <div className="flex gap-2">
                     <dt className="text-muted-foreground">{t('guardians.email')}:</dt>
-                    <dd className="ltr-nums break-all">{g.email ?? '—'}</dd>
+                    <dd
+                      className="ltr-nums break-all"
+                      data-testid={`student-guardians-${g.id}-email`}
+                    >
+                      {g.email ?? '—'}
+                    </dd>
                   </div>
                 </dl>
                 <RoleGate roles={STAFF_OR_ADMIN}>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button variant="outline" size="sm" onClick={() => openDialog(g)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openDialog(g)}
+                      data-testid={`student-guardians-${g.id}-edit`}
+                    >
                       <Pencil aria-hidden="true" />
                       {t('common.edit')}
                     </Button>
@@ -175,6 +201,7 @@ export function GuardiansTab({ studentId }: { studentId: string }) {
                         variant="outline"
                         size="sm"
                         disabled={update.isPending}
+                        data-testid={`student-guardians-${g.id}-make-primary`}
                         onClick={() =>
                           update.mutate(
                             { id: g.id, body: { isPrimary: true } },
@@ -186,7 +213,12 @@ export function GuardiansTab({ studentId }: { studentId: string }) {
                         {t('guardians.makePrimary')}
                       </Button>
                     ) : null}
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(g)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleting(g)}
+                      data-testid={`student-guardians-${g.id}-delete`}
+                    >
                       <Trash2 aria-hidden="true" />
                       {t('common.delete')}
                     </Button>
@@ -201,35 +233,38 @@ export function GuardiansTab({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="grid gap-4">
-      <RoleGate roles={STAFF_OR_ADMIN}>
-        <div className="flex justify-end">
-          <Button onClick={() => openDialog(null)}>
-            <Plus aria-hidden="true" />
-            {t('guardians.add')}
-          </Button>
-        </div>
-      </RoleGate>
-      {content}
-      <GuardianDialog
-        studentId={studentId}
-        guardian={editing}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
-      <ConfirmDialog
-        open={Boolean(deleting)}
-        onOpenChange={(o) => !o && setDeleting(null)}
-        title={t('guardians.deleteTitle')}
-        description={t('guardians.deleteBody', { name: deleting?.name ?? '' })}
-        confirmLabel={t('common.delete')}
-        destructive
-        pending={remove.isPending}
-        onConfirm={() =>
-          deleting &&
-          remove.mutate(deleting.id, { onSuccess: () => setDeleting(null), onError: toastError })
-        }
-      />
-    </div>
+    <TestIdScope id="student-guardians">
+      <div className="grid gap-4">
+        <RoleGate roles={STAFF_OR_ADMIN}>
+          <div className="flex justify-end">
+            <Button onClick={() => openDialog(null)} data-testid="student-guardians-add">
+              <Plus aria-hidden="true" />
+              {t('guardians.add')}
+            </Button>
+          </div>
+        </RoleGate>
+        {content}
+        <GuardianDialog
+          studentId={studentId}
+          guardian={editing}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+        />
+        <ConfirmDialog
+          testId="guardian-delete-dialog"
+          open={Boolean(deleting)}
+          onOpenChange={(o) => !o && setDeleting(null)}
+          title={t('guardians.deleteTitle')}
+          description={t('guardians.deleteBody', { name: deleting?.name ?? '' })}
+          confirmLabel={t('common.delete')}
+          destructive
+          pending={remove.isPending}
+          onConfirm={() =>
+            deleting &&
+            remove.mutate(deleting.id, { onSuccess: () => setDeleting(null), onError: toastError })
+          }
+        />
+      </div>
+    </TestIdScope>
   );
 }

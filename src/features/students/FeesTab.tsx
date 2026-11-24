@@ -28,13 +28,24 @@ import { PaymentForm } from '@/features/fees/PaymentForm';
 import { VoidPaymentDialog } from '@/features/fees/VoidPaymentDialog';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/format';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
-function Amount({ label, children }: { label: string; children: ReactNode }) {
+function Amount({
+  label,
+  testId,
+  children,
+}: {
+  label: string;
+  testId: string;
+  children: ReactNode;
+}) {
   return (
     <div className="grid gap-0.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{children}</dd>
+      <dd className="font-medium" data-testid={testId}>
+        {children}
+      </dd>
     </div>
   );
 }
@@ -42,18 +53,25 @@ function Amount({ label, children }: { label: string; children: ReactNode }) {
 function PaymentHistory({
   payments,
   onVoid,
+  testId,
 }: {
   payments: PaymentDto[];
   onVoid: (p: PaymentDto) => void;
+  /** The fee card's test ID; rows are `<testId>-payment-<id>`. */
+  testId: string;
 }) {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
   const isAdmin = useHasRole(ADMIN_ONLY);
   if (payments.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t('payments.none')}</p>;
+    return (
+      <p className="text-sm text-muted-foreground" data-testid={`${testId}-payments-empty`}>
+        {t('payments.none')}
+      </p>
+    );
   }
   return (
-    <Table>
+    <Table data-testid={`${testId}-payments`}>
       <caption className="sr-only">{t('payments.history')}</caption>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
@@ -75,14 +93,14 @@ function PaymentHistory({
           return (
             <TableRow
               key={p.id}
-              data-testid="payment-row"
+              data-testid={`${testId}-payment-${p.id}`}
               className={cn(voided && 'text-muted-foreground')}
             >
               <TableCell className="whitespace-nowrap">{formatDate(p.paidOn, locale)}</TableCell>
               <TableCell>
                 <MoneyText value={p.amount} strike={voided} />
                 {voided ? (
-                  <p className="text-xs">
+                  <p className="text-xs" data-testid={`${testId}-payment-${p.id}-voided`}>
                     {t('payments.voidedBy', { name: p.voidedByName ?? '' })}: {p.voidReason}
                   </p>
                 ) : null}
@@ -93,7 +111,12 @@ function PaymentHistory({
               {isAdmin ? (
                 <TableCell className="text-end">
                   {!voided ? (
-                    <Button variant="ghost" size="sm" onClick={() => onVoid(p)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onVoid(p)}
+                      data-testid={`${testId}-payment-${p.id}-void`}
+                    >
                       <Ban aria-hidden="true" />
                       {t('payments.void')}
                     </Button>
@@ -121,45 +144,44 @@ function FeeCard({
 }) {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
+  const id = `student-fees-fee-${fee.id}`;
   return (
-    <Card data-testid="fee-item">
+    <Card data-testid={id}>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
         <div className="grid gap-1">
-          <CardTitle>{fee.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <CardTitle data-testid={`${id}-title`}>{fee.title}</CardTitle>
+          <p className="text-sm text-muted-foreground" data-testid={`${id}-due-date`}>
             {t('fees.dueOn', { date: formatDate(fee.dueDate, locale) })}
           </p>
         </div>
-        <BalanceBadge status={fee.status} outstanding={fee.outstanding} />
+        <BalanceBadge status={fee.status} outstanding={fee.outstanding} testId={`${id}-status`} />
       </CardHeader>
       <CardContent className="grid gap-4">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-          <Amount label={t('fees.amount')}>
+          <Amount label={t('fees.amount')} testId={`${id}-amount`}>
             <MoneyText value={fee.amount} />
           </Amount>
-          <Amount label={t('fees.discount')}>
+          <Amount label={t('fees.discount')} testId={`${id}-discount`}>
             <MoneyText value={fee.discount} />
           </Amount>
-          <Amount label={t('fees.netDue')}>
+          <Amount label={t('fees.netDue')} testId={`${id}-net-due`}>
             <MoneyText value={fee.netDue} />
           </Amount>
-          <Amount label={t('fees.paid')}>
+          <Amount label={t('fees.paid')} testId={`${id}-paid`}>
             <MoneyText value={fee.paid} />
           </Amount>
-          <Amount label={t('fees.outstanding')}>
-            <span data-testid="fee-outstanding">
-              <MoneyText value={fee.outstanding} />
-            </span>
+          <Amount label={t('fees.outstanding')} testId={`${id}-outstanding`}>
+            <MoneyText value={fee.outstanding} />
           </Amount>
         </dl>
         <RoleGate roles={STAFF_OR_ADMIN}>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={onPay}>
+            <Button size="sm" onClick={onPay} data-testid={`${id}-record-payment`}>
               <Banknote aria-hidden="true" />
               {t('payments.record')}
             </Button>
             {!fee.locked ? (
-              <Button size="sm" variant="outline" onClick={onEdit}>
+              <Button size="sm" variant="outline" onClick={onEdit} data-testid={`${id}-edit`}>
                 <Pencil aria-hidden="true" />
                 {t('fees.edit')}
               </Button>
@@ -168,7 +190,7 @@ function FeeCard({
         </RoleGate>
         <div className="grid gap-2">
           <h4 className="text-sm font-semibold">{t('payments.history')}</h4>
-          <PaymentHistory payments={fee.payments} onVoid={onVoid} />
+          <PaymentHistory payments={fee.payments} onVoid={onVoid} testId={id} />
         </div>
       </CardContent>
     </Card>
@@ -186,66 +208,86 @@ export function FeesTab({ studentId }: { studentId: string }) {
   const [voiding, setVoiding] = useState<PaymentDto | null>(null);
 
   if (fees.isPending) return <Skeleton className="h-64 rounded-xl" />;
-  if (fees.isError) return <ErrorState error={fees.error} onRetry={() => void fees.refetch()} />;
+  if (fees.isError) {
+    return (
+      <TestIdScope id="student-fees">
+        <ErrorState error={fees.error} onRetry={() => void fees.refetch()} />
+      </TestIdScope>
+    );
+  }
   const { summary, items } = fees.data;
 
   return (
-    <div className="grid gap-4">
-      <Card className="gap-3">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-          <CardTitle>{t('fees.summary')}</CardTitle>
-          <div className="flex items-center gap-3">
-            <BalanceBadge status={summary.status} outstanding={summary.outstanding} />
-            <RoleGate roles={STAFF_OR_ADMIN}>
-              <Button size="sm" onClick={() => setFeeDialog({ open: true, fee: null })}>
-                <Plus aria-hidden="true" />
-                {t('fees.add')}
-              </Button>
-            </RoleGate>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-            <Amount label={t('fees.netDue')}>
-              <MoneyText value={summary.netDue} />
-            </Amount>
-            <Amount label={t('fees.paid')}>
-              <MoneyText value={summary.paid} />
-            </Amount>
-            <Amount label={t('fees.outstanding')}>
-              <MoneyText value={summary.outstanding} />
-            </Amount>
-          </dl>
-        </CardContent>
-      </Card>
+    <TestIdScope id="student-fees">
+      <div className="grid gap-4">
+        <Card className="gap-3" data-testid="student-fees-summary">
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+            <CardTitle>{t('fees.summary')}</CardTitle>
+            <div className="flex items-center gap-3">
+              <BalanceBadge
+                status={summary.status}
+                outstanding={summary.outstanding}
+                testId="student-fees-summary-status"
+              />
+              <RoleGate roles={STAFF_OR_ADMIN}>
+                <Button
+                  size="sm"
+                  onClick={() => setFeeDialog({ open: true, fee: null })}
+                  data-testid="student-fees-add"
+                >
+                  <Plus aria-hidden="true" />
+                  {t('fees.add')}
+                </Button>
+              </RoleGate>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+              <Amount label={t('fees.netDue')} testId="student-fees-summary-net-due">
+                <MoneyText value={summary.netDue} />
+              </Amount>
+              <Amount label={t('fees.paid')} testId="student-fees-summary-paid">
+                <MoneyText value={summary.paid} />
+              </Amount>
+              <Amount label={t('fees.outstanding')} testId="student-fees-summary-outstanding">
+                <MoneyText value={summary.outstanding} />
+              </Amount>
+            </dl>
+          </CardContent>
+        </Card>
 
-      {items.length === 0 ? (
-        <EmptyState message={t('fees.empty')} />
-      ) : (
-        items.map((fee) => (
-          <FeeCard
-            key={fee.id}
-            fee={fee}
-            onPay={() => setPayFor(fee)}
-            onEdit={() => setFeeDialog({ open: true, fee })}
-            onVoid={setVoiding}
-          />
-        ))
-      )}
+        {items.length === 0 ? (
+          <EmptyState message={t('fees.empty')} />
+        ) : (
+          items.map((fee) => (
+            <FeeCard
+              key={fee.id}
+              fee={fee}
+              onPay={() => setPayFor(fee)}
+              onEdit={() => setFeeDialog({ open: true, fee })}
+              onVoid={setVoiding}
+            />
+          ))
+        )}
 
-      <FeeItemForm
-        studentId={studentId}
-        fee={feeDialog.fee}
-        open={feeDialog.open}
-        onOpenChange={(open) => setFeeDialog((s) => ({ ...s, open }))}
-      />
-      <PaymentForm
-        studentId={studentId}
-        fee={payFor}
-        open={Boolean(payFor)}
-        onOpenChange={(open) => !open && setPayFor(null)}
-      />
-      <VoidPaymentDialog studentId={studentId} payment={voiding} onClose={() => setVoiding(null)} />
-    </div>
+        <FeeItemForm
+          studentId={studentId}
+          fee={feeDialog.fee}
+          open={feeDialog.open}
+          onOpenChange={(open) => setFeeDialog((s) => ({ ...s, open }))}
+        />
+        <PaymentForm
+          studentId={studentId}
+          fee={payFor}
+          open={Boolean(payFor)}
+          onOpenChange={(open) => !open && setPayFor(null)}
+        />
+        <VoidPaymentDialog
+          studentId={studentId}
+          payment={voiding}
+          onClose={() => setVoiding(null)}
+        />
+      </div>
+    </TestIdScope>
   );
 }

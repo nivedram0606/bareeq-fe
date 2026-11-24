@@ -12,18 +12,21 @@ const VARIANT = { paid: 'success', partial: 'warning', unpaid: 'destructive' } a
 export function BalanceBadge({
   status,
   outstanding,
+  testId,
 }: {
   status: BalanceStatus;
   outstanding: string;
+  /** Test ID of the status badge; the overpaid badge is `<testId>-overpaid`. */
+  testId: string;
 }) {
   const { t } = useTranslation();
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
-      <Badge variant={VARIANT[status]} data-testid="balance-status">
+      <Badge variant={VARIANT[status]} data-testid={testId}>
         {t(`balance.${status}`)}
       </Badge>
       {isOverpaid(outstanding) ? (
-        <Badge variant="warning">
+        <Badge variant="warning" data-testid={`${testId}-overpaid`}>
           <AlertTriangle aria-hidden="true" />
           {t('balance.overpaid')}
         </Badge>

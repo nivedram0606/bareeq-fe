@@ -44,6 +44,7 @@ export function FeeCollectionReportPage() {
           <Link
             to={`/students/${row.original.studentId}?tab=fees`}
             className="font-medium text-primary hover:underline"
+            data-testid={`report-fee-collection-row-${row.id}-student`}
           >
             {row.original.studentName}
           </Link>
@@ -85,11 +86,13 @@ export function FeeCollectionReportPage() {
       filters={
         <>
           <DateFilter
+            field="from"
             label={t('reports.from')}
             value={values.from}
             onChange={(from) => setFilters({ from })}
           />
           <DateFilter
+            field="to"
             label={t('reports.to')}
             value={values.to}
             onChange={(to) => setFilters({ to })}
@@ -97,6 +100,7 @@ export function FeeCollectionReportPage() {
           <ClassFilter value={values.classId} onChange={(classId) => setFilters({ classId })} />
           <NativeSelect
             aria-label={t('payments.method')}
+            data-testid="report-fee-collection-filter-method"
             className="w-full sm:w-44"
             value={values.method}
             onChange={(e) => setFilters({ method: e.target.value })}
@@ -126,7 +130,7 @@ export function FeeCollectionReportPage() {
           report.data ? (
             <TableRow>
               <TableCell colSpan={4}>{t('reports.totalCollected')}</TableCell>
-              <TableCell className="text-end" data-testid="report-total">
+              <TableCell className="text-end" data-testid="report-fee-collection-total">
                 <MoneyText value={report.data.totals.collected} />
               </TableCell>
               <TableCell colSpan={3} />

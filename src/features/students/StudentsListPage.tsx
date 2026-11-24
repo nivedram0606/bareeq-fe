@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/form-controls';
 import { useClassOptions } from '@/features/classes/api';
 import { useUrlFilters } from '@/lib/useUrlFilters';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useStudents } from './api';
@@ -45,7 +46,11 @@ export function StudentsListPage() {
           const secondary = locale === 'ar' ? `${s.firstName} ${s.lastName}` : s.nameAr;
           return (
             <div className="grid">
-              <Link to={`/students/${s.id}`} className="font-medium text-primary hover:underline">
+              <Link
+                to={`/students/${s.id}`}
+                className="font-medium text-primary hover:underline"
+                data-testid={`students-row-${s.id}-open`}
+              >
                 {primary}
               </Link>
               {secondary && secondary !== primary ? (
@@ -90,6 +95,7 @@ export function StudentsListPage() {
                 <Button asChild variant="ghost" size="sm">
                   <Link
                     to={`/students/${row.original.id}/edit`}
+                    data-testid={`students-row-${row.original.id}-edit`}
                     aria-label={t('students.editNamed', {
                       name: `${row.original.firstName} ${row.original.lastName}`,
                     })}
@@ -107,13 +113,13 @@ export function StudentsListPage() {
   );
 
   return (
-    <>
+    <TestIdScope id="students">
       <PageHeader
         title={t('students.title')}
         actions={
           <RoleGate roles={STAFF_OR_ADMIN}>
             <Button asChild>
-              <Link to="/students/new">
+              <Link to="/students/new" data-testid="students-new">
                 <Plus aria-hidden="true" />
                 {t('students.new')}
               </Link>
@@ -129,6 +135,7 @@ export function StudentsListPage() {
         />
         <NativeSelect
           aria-label={t('students.filterClass')}
+          data-testid="students-filter-class"
           className="w-full sm:w-52"
           value={values.classId}
           onChange={(e) => setFilters({ classId: e.target.value })}
@@ -142,6 +149,7 @@ export function StudentsListPage() {
         </NativeSelect>
         <NativeSelect
           aria-label={t('students.filterStatus')}
+          data-testid="students-filter-status"
           className="w-full sm:w-40"
           value={values.status}
           onChange={(e) => setFilters({ status: e.target.value })}
@@ -172,6 +180,6 @@ export function StudentsListPage() {
           onPageChange: (p) => setFilters({ page: p }),
         }}
       />
-    </>
+    </TestIdScope>
   );
 }

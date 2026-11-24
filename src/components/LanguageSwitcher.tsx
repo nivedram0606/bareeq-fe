@@ -25,12 +25,17 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t('header.language')}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t('header.language')}
+          data-testid="language-menu"
+        >
           <Languages aria-hidden="true" />
           <span>{t(`languages.${locale}`)}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" data-testid="language-menu-content">
         <DropdownMenuLabel>{t('header.language')}</DropdownMenuLabel>
         <DropdownMenuRadioGroup
           value={locale}
@@ -39,7 +44,7 @@ export function LanguageSwitcher() {
           }}
         >
           {LOCALES.map((l) => (
-            <DropdownMenuRadioItem key={l} value={l} lang={l}>
+            <DropdownMenuRadioItem key={l} value={l} lang={l} data-testid={`language-${l}`}>
               {t(`languages.${l}`)}
             </DropdownMenuRadioItem>
           ))}

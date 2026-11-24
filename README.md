@@ -54,6 +54,10 @@ Icons are generated from `public/pwa-icon.svg`:
 pnpm pwa:icons
 ```
 
+### Test automation
+
+Every interactive element has a stable `data-testid` for QA automation. See [docs/TEST_IDS.md](docs/TEST_IDS.md) for the naming scheme.
+
 ### Deployment
 This frontend can be deployed directly to Netlify, Vercel, Cloudflare Pages, or any static hosting service.
 - **Build command**: `pnpm build` (or `npm run build`)

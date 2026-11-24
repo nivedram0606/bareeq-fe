@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { displayName } from '@/lib/displayName';
 import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
+import { TestIdScope } from '@/lib/testId';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { useCreateUser, useResetUserPassword, useUpdateUser, useUsers } from './api';
@@ -68,7 +69,7 @@ function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="user-form">
         <DialogHeader>
           <DialogTitle>{t('users.create')}</DialogTitle>
           <DialogDescription>{t('users.createHint')}</DialogDescription>
@@ -112,10 +113,14 @@ function CreateUserDialog({
             <Input type="password" autoComplete="new-password" {...form.register('password')} />
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="user-form-cancel"
+            >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="user-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('users.createSubmit')}
             </Button>
           </DialogFooter>
@@ -155,7 +160,7 @@ function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClo
 
   return (
     <Dialog open={Boolean(user)} onOpenChange={(o) => !o && close()}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="reset-password-form">
         <DialogHeader>
           <DialogTitle>{t('users.resetPasswordTitle', { name: user?.fullName ?? '' })}</DialogTitle>
           <DialogDescription>{t('users.resetPasswordHint')}</DialogDescription>
@@ -170,10 +175,10 @@ function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClo
             <Input type="password" autoComplete="new-password" {...form.register('password')} />
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={close}>
+            <Button variant="outline" onClick={close} data-testid="reset-password-form-cancel">
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button data-testid="reset-password-form-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('common.saving') : t('users.resetPassword')}
             </Button>
           </DialogFooter>
@@ -202,7 +207,12 @@ export function UsersPage() {
           <span className="font-medium">
             {displayName(row.original.fullName, t)}
             {row.original.id === myId ? (
-              <span className="ms-2 text-xs text-muted-foreground">({t('users.you')})</span>
+              <span
+                className="ms-2 text-xs text-muted-foreground"
+                data-testid={`users-row-${row.original.id}-you`}
+              >
+                ({t('users.you')})
+              </span>
             ) : null}
           </span>
         ),
@@ -231,6 +241,7 @@ export function UsersPage() {
           return (
             <NativeSelect
               aria-label={t('users.roleFor', { name: u.fullName })}
+              data-testid={`users-row-${u.id}-role-select`}
               className="w-40"
               value={u.role}
               disabled={u.id === myId || update.isPending}
@@ -271,6 +282,7 @@ export function UsersPage() {
                 size="sm"
                 title={t('users.resetPassword')}
                 onClick={() => setResetting(row.original)}
+                data-testid={`users-row-${row.original.id}-reset-password`}
               >
                 <KeyRound aria-hidden="true" />
                 <span className="max-lg:sr-only">{t('users.resetPassword')}</span>
@@ -280,6 +292,7 @@ export function UsersPage() {
                 size="sm"
                 title={row.original.isActive ? t('users.deactivate') : t('users.activate')}
                 onClick={() => setToggling(row.original)}
+                data-testid={`users-row-${row.original.id}-toggle-active`}
               >
                 <Power aria-hidden="true" />
                 <span className="max-lg:sr-only">
@@ -294,12 +307,12 @@ export function UsersPage() {
   );
 
   return (
-    <>
+    <TestIdScope id="users">
       <PageHeader
         title={t('users.title')}
         description={t('users.subtitle')}
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
+          <Button onClick={() => setCreateOpen(true)} data-testid="users-new">
             <UserPlus aria-hidden="true" />
             {t('users.create')}
           </Button>
@@ -333,6 +346,7 @@ export function UsersPage() {
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
       <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />
       <ConfirmDialog
+        testId="user-status-dialog"
         open={Boolean(toggling)}
         onOpenChange={(o) => !o && setToggling(null)}
         title={toggling?.isActive ? t('users.deactivateTitle') : t('users.activateTitle')}
@@ -352,6 +366,6 @@ export function UsersPage() {
           )
         }
       />
-    </>
+    </TestIdScope>
   );
 }

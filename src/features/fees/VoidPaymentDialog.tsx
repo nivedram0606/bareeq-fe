@@ -54,7 +54,7 @@ export function VoidPaymentDialog({
 
   return (
     <Dialog open={Boolean(payment)} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId="void-payment-form">
         <DialogHeader>
           <DialogTitle>{t('payments.voidTitle')}</DialogTitle>
           <DialogDescription>
@@ -66,10 +66,15 @@ export function VoidPaymentDialog({
             <Textarea {...form.register('reason')} />
           </FormField>
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} data-testid="void-payment-form-cancel">
               {t('common.cancel')}
             </Button>
-            <Button type="submit" variant="destructive" disabled={isSubmitting}>
+            <Button
+              data-testid="void-payment-form-submit"
+              type="submit"
+              variant="destructive"
+              disabled={isSubmitting}
+            >
               {t('payments.void')}
             </Button>
           </DialogFooter>

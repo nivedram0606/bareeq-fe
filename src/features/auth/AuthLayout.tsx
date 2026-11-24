@@ -8,16 +8,20 @@ import { Skeleton } from '@/components/ui/misc';
 import { schoolName, useBranding } from '@/features/settings/api';
 import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor } from '@/lib/brand';
+import { testId as joinTestId, TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 /** Centered card with the school's logo and name, used by the public auth pages. */
 export function AuthLayout({
   title,
   subtitle,
+  testId,
   children,
 }: {
   title: string;
   subtitle?: string;
+  /** Page test ID (e.g. `login`), also the scope of the form inside. */
+  testId: string;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -53,6 +57,7 @@ export function AuthLayout({
               <img
                 src={apiAssetUrl(branding.logoUrl)}
                 alt=""
+                data-testid={joinTestId(testId, 'school-logo')}
                 className="size-16 rounded-xl object-contain"
               />
             ) : (
@@ -63,16 +68,27 @@ export function AuthLayout({
                 {name.slice(0, 1)}
               </span>
             )}
-            <p className="text-lg font-semibold" data-testid="school-name">
+            <p className="text-lg font-semibold" data-testid={joinTestId(testId, 'school-name')}>
               {name}
             </p>
           </div>
-          <Card>
+          <Card data-testid={joinTestId(testId, 'card')}>
             <CardHeader>
-              <h1 className="text-xl leading-none font-semibold">{title}</h1>
-              {subtitle ? <CardDescription>{subtitle}</CardDescription> : null}
+              <h1
+                className="text-xl leading-none font-semibold"
+                data-testid={joinTestId(testId, 'heading')}
+              >
+                {title}
+              </h1>
+              {subtitle ? (
+                <CardDescription data-testid={joinTestId(testId, 'subtitle')}>
+                  {subtitle}
+                </CardDescription>
+              ) : null}
             </CardHeader>
-            <CardContent>{children}</CardContent>
+            <CardContent>
+              <TestIdScope id={testId}>{children}</TestIdScope>
+            </CardContent>
           </Card>
         </div>
       </main>

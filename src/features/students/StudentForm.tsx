@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/misc';
 import { useClassOptions } from '@/features/classes/api';
 import { todayIso } from '@/lib/format';
 import { applyServerErrors } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 
 import { useCreateStudent, useStudent, useUpdateStudent } from './api';
 
@@ -99,7 +100,12 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
   return (
     <Card>
       <CardContent>
-        <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-5">
+        <form
+          noValidate
+          onSubmit={(e) => void onSubmit(e)}
+          className="grid gap-5"
+          data-testid="student-form-form"
+        >
           <div className="grid gap-4 md:grid-cols-2">
             <FormField
               label={t('students.admissionNo')}
@@ -115,7 +121,7 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
             >
               {classLocked ? (
                 <>
-                  <NativeSelect disabled value={lockedClassId}>
+                  <NativeSelect disabled value={lockedClassId} data-testid="student-form-classId">
                     <option value="">{t('students.noClass')}</option>
                     {classes.data?.data.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -181,7 +187,10 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
             </FormField>
           </div>
           {student ? null : (
-            <fieldset className="grid gap-4 rounded-lg border p-4">
+            <fieldset
+              className="grid gap-4 rounded-lg border p-4"
+              data-testid="student-form-primary-contact"
+            >
               <legend className="px-1 text-sm font-semibold">{t('students.primaryContact')}</legend>
               <p className="-mt-2 text-sm text-muted-foreground">
                 {t('students.primaryContactHint')}
@@ -230,9 +239,11 @@ function StudentFormBody({ student }: { student?: StudentDto }) {
 
           <div className="flex justify-end gap-2">
             <Button asChild variant="outline">
-              <Link to={cancelTo}>{t('common.cancel')}</Link>
+              <Link to={cancelTo} data-testid="student-form-cancel">
+                {t('common.cancel')}
+              </Link>
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} data-testid="student-form-submit">
               {isSubmitting ? t('common.saving') : t('common.save')}
             </Button>
           </div>
@@ -250,17 +261,19 @@ export function StudentFormPage() {
   const isEdit = Boolean(id);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader title={isEdit ? t('students.edit') : t('students.new')} />
-      {!isEdit ? (
-        <StudentFormBody />
-      ) : student.isPending ? (
-        <Skeleton className="h-96 rounded-xl" />
-      ) : student.isError ? (
-        <ErrorState error={student.error} onRetry={() => void student.refetch()} />
-      ) : (
-        <StudentFormBody student={student.data} />
-      )}
-    </div>
+    <TestIdScope id="student-form">
+      <div className="mx-auto max-w-3xl">
+        <PageHeader title={isEdit ? t('students.edit') : t('students.new')} />
+        {!isEdit ? (
+          <StudentFormBody />
+        ) : student.isPending ? (
+          <Skeleton className="h-96 rounded-xl" />
+        ) : student.isError ? (
+          <ErrorState error={student.error} onRetry={() => void student.refetch()} />
+        ) : (
+          <StudentFormBody student={student.data} />
+        )}
+      </div>
+    </TestIdScope>
   );
 }

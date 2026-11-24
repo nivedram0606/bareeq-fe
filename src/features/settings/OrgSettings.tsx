@@ -15,6 +15,7 @@ import { NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/misc';
 import { applyServerErrors } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 
 import { useOrg, useUpdateOrg } from './api';
 
@@ -51,7 +52,12 @@ function OrgForm({ org }: { org: OrgDto }) {
   });
 
   return (
-    <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
+    <form
+      noValidate
+      onSubmit={(e) => void onSubmit(e)}
+      className="grid gap-4"
+      data-testid="settings-org-form"
+    >
       <FormField label={t('settings.schoolName')} error={errors.name?.message} required>
         <Input autoComplete="organization" {...form.register('name')} />
       </FormField>
@@ -60,7 +66,7 @@ function OrgForm({ org }: { org: OrgDto }) {
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label={t('settings.currency')} hint={t('settings.currencyHint')}>
-          <Input value={org.currency} readOnly disabled />
+          <Input value={org.currency} readOnly disabled data-testid="settings-org-currency" />
         </FormField>
         <FormField
           label={t('settings.defaultLocale')}
@@ -78,7 +84,7 @@ function OrgForm({ org }: { org: OrgDto }) {
         </FormField>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting || !isDirty}>
+        <Button type="submit" disabled={isSubmitting || !isDirty} data-testid="settings-org-submit">
           {isSubmitting ? t('common.saving') : t('common.save')}
         </Button>
       </div>
@@ -90,19 +96,21 @@ export function OrgSettingsPage() {
   const { t } = useTranslation();
   const org = useOrg();
   return (
-    <div className="mx-auto max-w-2xl">
-      <PageHeader title={t('settings.orgTitle')} description={t('settings.orgSubtitle')} />
-      <Card>
-        <CardContent>
-          {org.isPending ? (
-            <Skeleton className="h-64" />
-          ) : org.isError ? (
-            <ErrorState error={org.error} onRetry={() => void org.refetch()} />
-          ) : (
-            <OrgForm org={org.data} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <TestIdScope id="settings-org">
+      <div className="mx-auto max-w-2xl">
+        <PageHeader title={t('settings.orgTitle')} description={t('settings.orgSubtitle')} />
+        <Card>
+          <CardContent>
+            {org.isPending ? (
+              <Skeleton className="h-64" />
+            ) : org.isError ? (
+              <ErrorState error={org.error} onRetry={() => void org.refetch()} />
+            ) : (
+              <OrgForm org={org.data} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </TestIdScope>
   );
 }

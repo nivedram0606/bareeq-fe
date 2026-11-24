@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { studentName } from '@/lib/display';
 import { formatDate } from '@/lib/format';
 import { toastError } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
 import { useStudent, useUpdateStudent } from './api';
@@ -28,11 +29,13 @@ import { GuardiansTab } from './GuardiansTab';
 const TABS = ['profile', 'guardians', 'fees'] as const;
 type Tab = (typeof TABS)[number];
 
-function Detail({ label, children }: { label: string; children: ReactNode }) {
+function Detail({ label, field, children }: { label: string; field: string; children: ReactNode }) {
   return (
     <div className="grid gap-1">
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-      <dd className="text-sm">{children}</dd>
+      <dd className="text-sm" data-testid={`student-profile-${field}`}>
+        {children}
+      </dd>
     </div>
   );
 }
@@ -41,28 +44,40 @@ function ProfileTab({ student }: { student: StudentDto }) {
   const { t } = useTranslation();
   const locale = useUiStore((s) => s.locale);
   return (
-    <Card>
+    <Card data-testid="student-profile">
       <CardContent>
         <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <Detail label={t('students.admissionNo')}>
+          <Detail label={t('students.admissionNo')} field="admission-no">
             <span className="ltr-nums">{student.admissionNo}</span>
           </Detail>
-          <Detail label={t('students.firstName')}>{student.firstName}</Detail>
-          <Detail label={t('students.lastName')}>{student.lastName}</Detail>
-          <Detail label={t('students.nameAr')}>
+          <Detail label={t('students.firstName')} field="first-name">
+            {student.firstName}
+          </Detail>
+          <Detail label={t('students.lastName')} field="last-name">
+            {student.lastName}
+          </Detail>
+          <Detail label={t('students.nameAr')} field="name-ar">
             {student.nameAr ? <span lang="ar">{student.nameAr}</span> : '—'}
           </Detail>
-          <Detail label={t('students.dob')}>{formatDate(student.dob, locale)}</Detail>
-          <Detail label={t('students.gender')}>{t(`gender.${student.gender}`)}</Detail>
-          <Detail label={t('students.class')}>{student.className ?? '—'}</Detail>
-          <Detail label={t('students.status')}>
+          <Detail label={t('students.dob')} field="dob">
+            {formatDate(student.dob, locale)}
+          </Detail>
+          <Detail label={t('students.gender')} field="gender">
+            {t(`gender.${student.gender}`)}
+          </Detail>
+          <Detail label={t('students.class')} field="class">
+            {student.className ?? '—'}
+          </Detail>
+          <Detail label={t('students.status')} field="status">
             <StatusBadge status={student.status} />
           </Detail>
-          <Detail label={t('students.joinedOn')}>{formatDate(student.joinedOn, locale)}</Detail>
-          <Detail label={t('students.primaryGuardian')}>
+          <Detail label={t('students.joinedOn')} field="joined-on">
+            {formatDate(student.joinedOn, locale)}
+          </Detail>
+          <Detail label={t('students.primaryGuardian')} field="primary-guardian">
             {student.primaryGuardianName ?? '—'}
           </Detail>
-          <Detail label={t('students.phone')}>
+          <Detail label={t('students.phone')} field="phone">
             {student.primaryGuardianPhone ? (
               <span className="ltr-nums">{student.primaryGuardianPhone}</span>
             ) : (
@@ -82,11 +97,12 @@ function StatusToggle({ student }: { student: StudentDto }) {
   const next = student.status === 'active' ? 'inactive' : 'active';
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
+      <Button variant="outline" onClick={() => setOpen(true)} data-testid="student-toggle-status">
         <Power aria-hidden="true" />
         {next === 'inactive' ? t('students.deactivate') : t('students.activate')}
       </Button>
       <ConfirmDialog
+        testId="student-status-dialog"
         open={open}
         onOpenChange={setOpen}
         title={next === 'inactive' ? t('students.deactivateTitle') : t('students.activateTitle')}
@@ -128,7 +144,7 @@ export function StudentDetailPage() {
   const s = student.data;
 
   return (
-    <>
+    <TestIdScope id="student">
       <PageHeader
         title={studentName(s, locale)}
         description={
@@ -142,7 +158,7 @@ export function StudentDetailPage() {
           <RoleGate roles={STAFF_OR_ADMIN}>
             <StatusToggle student={s} />
             <Button asChild>
-              <Link to={`/students/${s.id}/edit`}>
+              <Link to={`/students/${s.id}/edit`} data-testid="student-edit">
                 <Pencil aria-hidden="true" />
                 {t('common.edit')}
               </Link>
@@ -170,6 +186,6 @@ export function StudentDetailPage() {
           <FeesTab studentId={s.id} />
         </TabsContent>
       </Tabs>
-    </>
+    </TestIdScope>
   );
 }

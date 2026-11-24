@@ -2,6 +2,7 @@ import { Tabs as TabsPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/cn';
+import { useTestId } from '@/lib/testId';
 
 export function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitive.Root>) {
   return <TabsPrimitive.Root className={cn('flex flex-col gap-4', className)} {...props} />;
@@ -20,8 +21,10 @@ export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrim
 }
 
 export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const tid = useTestId();
   return (
     <TabsPrimitive.Trigger
+      data-testid={tid('tab', props.value)}
       className={cn(
         'inline-flex h-full items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm',
         className,
@@ -32,5 +35,12 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
 }
 
 export function TabsContent({ className, ...props }: ComponentProps<typeof TabsPrimitive.Content>) {
-  return <TabsPrimitive.Content className={cn('outline-none', className)} {...props} />;
+  const tid = useTestId();
+  return (
+    <TabsPrimitive.Content
+      data-testid={tid('panel', props.value)}
+      className={cn('outline-none', className)}
+      {...props}
+    />
+  );
 }

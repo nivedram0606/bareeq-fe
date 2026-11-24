@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Input } from '@/components/ui/input';
+import { useTestId } from '@/lib/testId';
 
 /** Search box that reports its value after the user pauses typing, with a × to clear it. */
 export function SearchInput({
@@ -17,6 +18,7 @@ export function SearchInput({
   delay?: number;
 }) {
   const { t } = useTranslation();
+  const tid = useTestId();
   const [draft, setDraft] = useState(value);
   const [synced, setSynced] = useState(value);
 
@@ -40,6 +42,7 @@ export function SearchInput({
       />
       <Input
         type="search"
+        data-testid={tid('search')}
         aria-label={label}
         placeholder={label}
         value={draft}
@@ -50,6 +53,7 @@ export function SearchInput({
       {draft ? (
         <button
           type="button"
+          data-testid={tid('search-clear')}
           aria-label={t('common.clearSearch')}
           title={t('common.clearSearch')}
           onClick={() => {

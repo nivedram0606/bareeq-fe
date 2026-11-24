@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { testId as joinTestId } from '@/lib/testId';
 
 /** Keyboard-accessible confirmation dialog (Radix focus trap, Esc to cancel). */
 export function ConfirmDialog({
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   destructive = false,
   pending = false,
   onConfirm,
+  testId,
   children,
 }: {
   open: boolean;
@@ -31,25 +33,33 @@ export function ConfirmDialog({
   destructive?: boolean;
   pending?: boolean;
   onConfirm: () => void;
+  /** Test ID of the dialog; its buttons are `<testId>-confirm` / `-cancel` / `-close`. */
+  testId: string;
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t('common.close')}>
+      <DialogContent closeLabel={t('common.close')} testId={testId}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
         {children}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={pending}
+            data-testid={joinTestId(testId, 'cancel')}
+          >
             {t('common.cancel')}
           </Button>
           <Button
             variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
             disabled={pending}
+            data-testid={joinTestId(testId, 'confirm')}
           >
             {confirmLabel}
           </Button>

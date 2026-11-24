@@ -21,6 +21,7 @@ import { schoolName, useOrg } from '@/features/settings/api';
 import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor } from '@/lib/brand';
 import { displayName } from '@/lib/displayName';
+import { TestIdScope, useTestId } from '@/lib/testId';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth.store';
 import { useUiStore } from '@/stores/ui.store';
@@ -31,6 +32,7 @@ import { NAVIGATION } from './navigation';
 function SchoolIdentity() {
   const { data: org, isPending } = useOrg();
   const locale = useUiStore((s) => s.locale);
+  const tid = useTestId();
   if (isPending) return <Skeleton className="h-8 w-40" />;
   if (!org) return null;
   const name = schoolName(org, locale);
@@ -40,6 +42,7 @@ function SchoolIdentity() {
         <img
           src={apiAssetUrl(org.logoUrl)}
           alt=""
+          data-testid={tid('school-logo')}
           className="size-9 shrink-0 rounded-md object-contain"
         />
       ) : (
@@ -50,7 +53,7 @@ function SchoolIdentity() {
           {name.slice(0, 1)}
         </span>
       )}
-      <span className="truncate font-semibold" data-testid="school-name">
+      <span className="truncate font-semibold" data-testid={tid('school-name')}>
         {name}
       </span>
     </div>
@@ -60,8 +63,9 @@ function SchoolIdentity() {
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
   const role = useAuthStore((s) => s.profile?.role);
+  const tid = useTestId();
   return (
-    <nav aria-label={t('nav.main')} className="flex flex-col gap-5 p-3">
+    <nav aria-label={t('nav.main')} className="flex flex-col gap-5 p-3" data-testid={tid('nav')}>
       {NAVIGATION.map((group, gi) => {
         const items = group.items.filter((i) => hasRole(role, i.roles));
         if (items.length === 0) return null;
@@ -78,6 +82,10 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 to={item.to}
                 end={item.end}
                 onClick={onNavigate}
+                data-testid={tid(
+                  'nav',
+                  item.to === '/' ? 'dashboard' : item.to.slice(1).replaceAll('/', '-'),
+                )}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -108,29 +116,38 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t('header.userMenu')}>
+        <Button variant="ghost" size="sm" aria-label={t('header.userMenu')} data-testid="user-menu">
           <UserCircle aria-hidden="true" />
           <span className="hidden max-w-40 truncate sm:inline">
             {displayName(profile.fullName, t)}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56" data-testid="user-menu-content">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="truncate">{displayName(profile.fullName, t)}</span>
-          <span className="truncate text-xs font-normal text-muted-foreground" dir="ltr">
+          <span className="truncate" data-testid="user-menu-name">
+            {displayName(profile.fullName, t)}
+          </span>
+          <span
+            className="truncate text-xs font-normal text-muted-foreground"
+            dir="ltr"
+            data-testid="user-menu-username"
+          >
             {profile.username}
           </span>
-          <span className="text-xs font-normal text-muted-foreground">
+          <span className="text-xs font-normal text-muted-foreground" data-testid="user-menu-role">
             {t(`roles.${profile.role}`)}
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => void navigate('/account/password')}>
+        <DropdownMenuItem
+          onSelect={() => void navigate('/account/password')}
+          data-testid="user-menu-change-password"
+        >
           <KeyRound aria-hidden="true" />
           {t('header.changePassword')}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void signOut()}>
+        <DropdownMenuItem onSelect={() => void signOut()} data-testid="user-menu-sign-out">
           <LogOut aria-hidden="true" className="rtl:rotate-180" />
           {t('header.signOut')}
         </DropdownMenuItem>
@@ -166,22 +183,28 @@ export function AppLayout() {
     <div className="min-h-screen">
       <a
         href="#main"
+        data-testid="skip-to-content"
         className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow"
       >
         {t('app.skipToContent')}
       </a>
 
-      <aside className="fixed inset-y-0 start-0 hidden w-64 flex-col border-e bg-card lg:flex">
-        <div className="flex h-16 items-center border-b px-4">
-          <SchoolIdentity />
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <SidebarNav />
-        </div>
+      <aside
+        className="fixed inset-y-0 start-0 hidden w-64 flex-col border-e bg-card lg:flex"
+        data-testid="sidebar"
+      >
+        <TestIdScope id="sidebar">
+          <div className="flex h-16 items-center border-b px-4">
+            <SchoolIdentity />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <SidebarNav />
+          </div>
+        </TestIdScope>
       </aside>
 
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent closeLabel={t('nav.close')}>
+        <SheetContent closeLabel={t('nav.close')} testId="mobile-menu">
           <div className="flex h-16 items-center border-b px-4 pe-10">
             <SheetTitle asChild>
               <div>
@@ -197,25 +220,36 @@ export function AppLayout() {
       </Sheet>
 
       <div className="lg:ps-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur">
+        <header
+          className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur"
+          data-testid="header"
+        >
           <Button
             variant="ghost"
             size="icon"
             className="lg:hidden"
             aria-label={t('nav.openMenu')}
+            data-testid="header-open-menu"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu aria-hidden="true" />
           </Button>
           <div className="min-w-0 lg:hidden">
-            <SchoolIdentity />
+            <TestIdScope id="header">
+              <SchoolIdentity />
+            </TestIdScope>
           </div>
           <div className="ms-auto flex items-center gap-1">
             <LanguageSwitcher />
             <UserMenu />
           </div>
         </header>
-        <main id="main" tabIndex={-1} className="mx-auto max-w-7xl p-4 outline-none md:p-6">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-7xl p-4 outline-none md:p-6"
+          data-testid="main"
+        >
           <Breadcrumbs />
           <Outlet />
         </main>

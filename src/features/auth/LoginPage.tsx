@@ -46,10 +46,15 @@ export function LoginPage() {
 
   const message = error ?? signOutReason;
   return (
-    <AuthLayout title={t('auth.signInTitle')} subtitle={t('auth.signInSubtitle')}>
-      <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
+    <AuthLayout testId="login" title={t('auth.signInTitle')} subtitle={t('auth.signInSubtitle')}>
+      <form
+        noValidate
+        onSubmit={(e) => void onSubmit(e)}
+        className="grid gap-4"
+        data-testid="login-form"
+      >
         {message ? (
-          <Alert variant="destructive">
+          <Alert variant="destructive" data-testid="login-error">
             {t(message, { defaultValue: t('auth.errors.generic') })}
           </Alert>
         ) : null}
@@ -74,10 +79,12 @@ export function LoginPage() {
         >
           <Input type="password" autoComplete="current-password" {...form.register('password')} />
         </FormField>
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" disabled={form.formState.isSubmitting} data-testid="login-submit">
           {form.formState.isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
-        <p className="text-center text-sm text-muted-foreground">{t('auth.forgotHint')}</p>
+        <p className="text-center text-sm text-muted-foreground" data-testid="login-forgot-hint">
+          {t('auth.forgotHint')}
+        </p>
       </form>
     </AuthLayout>
   );

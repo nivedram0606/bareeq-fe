@@ -70,7 +70,7 @@ export function Breadcrumbs() {
   const crumbs = useCrumbs();
   if (crumbs.length === 0) return null;
   return (
-    <nav aria-label={t('nav.breadcrumb')} className="mb-3">
+    <nav aria-label={t('nav.breadcrumb')} className="mb-3" data-testid="breadcrumbs">
       <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
         {crumbs.map((crumb, i) => {
           const last = i === crumbs.length - 1;
@@ -85,6 +85,7 @@ export function Breadcrumbs() {
                 {crumb.to && !last ? (
                   <Link
                     to={crumb.to}
+                    data-testid={`breadcrumb-${i}`}
                     className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
                     {i === 0 ? <Home aria-hidden="true" className="size-3.5" /> : null}
@@ -93,6 +94,7 @@ export function Breadcrumbs() {
                 ) : (
                   <span
                     aria-current={last ? 'page' : undefined}
+                    data-testid={`breadcrumb-${i}`}
                     className={last ? 'block max-w-64 truncate font-medium text-foreground' : ''}
                   >
                     {crumb.label}

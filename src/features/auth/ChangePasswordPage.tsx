@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { applyServerErrors, toastSuccess } from '@/lib/forms';
+import { TestIdScope } from '@/lib/testId';
 import { useAuthStore } from '@/stores/auth.store';
 
 const changeSchema = z
@@ -48,14 +49,19 @@ export function ChangePasswordPage() {
   });
 
   return (
-    <>
+    <TestIdScope id="change-password">
       <PageHeader
         title={t('auth.changePasswordTitle')}
         description={t('auth.changePasswordHint')}
       />
       <Card className="max-w-md">
         <CardContent>
-          <form noValidate onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
+          <form
+            noValidate
+            onSubmit={(e) => void onSubmit(e)}
+            className="grid gap-4"
+            data-testid="change-password-form"
+          >
             <FormField
               label={t('auth.currentPassword')}
               error={errors.currentPassword?.message}
@@ -82,12 +88,17 @@ export function ChangePasswordPage() {
             <FormField label={t('auth.confirmPassword')} error={errors.confirm?.message} required>
               <Input type="password" autoComplete="new-password" {...form.register('confirm')} />
             </FormField>
-            <Button type="submit" disabled={isSubmitting} className="justify-self-start">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="justify-self-start"
+              data-testid="change-password-submit"
+            >
               {isSubmitting ? t('auth.saving') : t('auth.savePassword')}
             </Button>
           </form>
         </CardContent>
       </Card>
-    </>
+    </TestIdScope>
   );
 }
