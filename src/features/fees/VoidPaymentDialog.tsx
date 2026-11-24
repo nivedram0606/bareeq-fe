@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/form-controls';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 
 import { useVoidPayment } from './api';
 
@@ -41,6 +41,7 @@ export function VoidPaymentDialog({
     values: { reason: '' },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(Boolean(payment), form.reset);
 
   const onSubmit = form.handleSubmit(async (body) => {
     if (!payment) return;

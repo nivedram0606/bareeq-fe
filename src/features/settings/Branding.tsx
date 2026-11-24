@@ -107,7 +107,7 @@ function ColorCard({ org }: { org: OrgDto }) {
 
   // Live preview; reverted to the saved colour when leaving without saving.
   useEffect(() => {
-    if (valid) applyBrandColor(color);
+    if (valid) applyBrandColor(color, { persist: false });
   }, [color, valid]);
   useEffect(() => () => applyBrandColor(org.brandColor), [org.brandColor]);
 

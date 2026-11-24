@@ -1,4 +1,5 @@
-import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
+import { useEffect } from 'react';
+import type { FieldValues, Path, UseFormReset, UseFormSetError } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import i18n from '@/i18n';
@@ -43,4 +44,14 @@ export function applyServerErrors<T extends FieldValues>(
 
 export function toastSuccess(key: string): void {
   toast.success(i18n.t(key));
+}
+
+/**
+ * Clears a dialog's form each time the dialog opens, so a cancelled or closed dialog never shows
+ * the values or errors from last time. The form goes back to its `values` / `defaultValues`.
+ */
+export function useResetOnOpen<T extends FieldValues>(open: boolean, reset: UseFormReset<T>): void {
+  useEffect(() => {
+    if (open) reset();
+  }, [open, reset]);
 }

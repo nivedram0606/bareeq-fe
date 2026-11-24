@@ -16,14 +16,30 @@ export function foregroundFor(hex: string): string {
   return contrast(l, 1) >= contrast(l, luminance('#0f172a')) ? '#ffffff' : '#0f172a';
 }
 
-/** Applies the organization's brand colour to the CSS variables used by primary UI. */
-export function applyBrandColor(hex: string | null | undefined): void {
+/** localStorage key read by the inline script in index.html to paint the saved colour at once. */
+export const BRAND_STORAGE_KEY = 'bareeq.brand';
+
+/**
+ * Applies the organization's brand colour to the CSS variables used by primary UI and to the
+ * browser / phone status bar. It is remembered (unless `persist` is false, as in the live preview)
+ * so the next visit starts in the school's colour instead of the default before the API answers.
+ */
+export function applyBrandColor(
+  hex: string | null | undefined,
+  { persist = true }: { persist?: boolean } = {},
+): void {
   if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const foreground = foregroundFor(hex);
   const root = document.documentElement.style;
   root.setProperty('--brand', hex);
-  root.setProperty('--brand-foreground', foregroundFor(hex));
-  // The browser / installed-app toolbar and the phone status bar use the theme colour too.
+  root.setProperty('--brand-foreground', foreground);
   document
     .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
     .forEach((meta) => meta.setAttribute('content', hex));
+  if (!persist) return;
+  try {
+    localStorage.setItem(BRAND_STORAGE_KEY, JSON.stringify({ hex, foreground }));
+  } catch {
+    // Storage can be unavailable (private mode); the colour still applies for this visit.
+  }
 }

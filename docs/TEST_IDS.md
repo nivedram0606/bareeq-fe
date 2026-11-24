@@ -37,6 +37,7 @@ Dialogs have their own scope, for example `staff-form`, `class-form`, `user-form
 | Page heading / description | `<scope>-heading`, `<scope>-description` |
 | Form field | `<scope>-<fieldName>`: the field name the API uses, e.g. `staff-form-fullName`, `student-form-primaryContact-phone` |
 | Field error / hint text | `<field id>-error`, `<field id>-hint` |
+| Password show/hide (eye) button | `<field id>-toggle` (e.g. `login-password-toggle`) |
 | Dialog | `<dialog>`, with `<dialog>-heading`, `<dialog>-description`, `<dialog>-cancel`, `<dialog>-submit` (or `-confirm`) and `<dialog>-close` (the ×) |
 | Search box and its × | `<scope>-search`, `<scope>-search-clear` |
 | Filters | `<scope>-filter-<name>` (e.g. `students-filter-class`), `<scope>-clear-filters` |
@@ -65,7 +66,7 @@ You can also match by prefix and suffix: `[data-testid^="students-row-"][data-te
 - Navigation: `sidebar-nav-<page>` on desktop and `mobile-menu-nav-<page>` in the phone menu. `<page>` is one of `dashboard`, `students`, `classes`, `staff`, `reports-students`, `reports-fee-collection`, `reports-outstanding`, `settings-organization`, `settings-branding`, `settings-users`, `settings-academic-years` or `settings-export`. Open the phone menu with `header-open-menu`.
 - Top bar: `language-menu` → `language-en` / `language-ar`; `user-menu` → `user-menu-name`, `user-menu-role`, `user-menu-change-password`, `user-menu-sign-out`.
 - Breadcrumbs: `breadcrumbs`, items `breadcrumb-0`, `breadcrumb-1` and so on.
-- Sign-in: `login-username`, `login-password`, `login-submit`, `login-error`.
+- Sign-in: `login-username`, `login-password`, `login-password-toggle`, `login-submit`, `login-error`.
 - Dashboard: `dashboard-kpi-active-students-value`, `dashboard-kpi-collected-this-month-value`, `dashboard-kpi-total-outstanding-value`, `dashboard-payment-row-<payment id>`.
 - Student page: `student-edit`, `student-toggle-status`, `student-profile-<field>` (e.g. `student-profile-admission-no`).
 - Fees tab: `student-fees-add`, `student-fees-summary-outstanding`, a fee card `student-fees-fee-<fee id>` with `-record-payment`, `-edit`, `-status`, `-outstanding`, and payments `student-fees-fee-<fee id>-payment-<payment id>` with `-void`.

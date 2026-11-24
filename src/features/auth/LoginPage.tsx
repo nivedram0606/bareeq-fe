@@ -10,6 +10,7 @@ import { loginSchema } from '@bareeq/shared';
 import { FormField } from '@/components/FormField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Alert } from '@/components/ui/misc';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -77,7 +78,7 @@ export function LoginPage() {
           error={form.formState.errors.password?.message}
           required
         >
-          <Input type="password" autoComplete="current-password" {...form.register('password')} />
+          <PasswordInput autoComplete="current-password" {...form.register('password')} />
         </FormField>
         <Button type="submit" disabled={form.formState.isSubmitting} data-testid="login-submit">
           {form.formState.isSubmitting ? t('auth.signingIn') : t('auth.signIn')}

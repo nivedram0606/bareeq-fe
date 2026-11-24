@@ -19,7 +19,7 @@ import {
 import { NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { useAcademicYears } from '@/features/classes/api';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 
 import { useCreateFee, useUpdateFee } from './api';
 
@@ -57,6 +57,7 @@ export function FeeItemForm({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async ({ studentId: _s, ...values }) => {
     try {

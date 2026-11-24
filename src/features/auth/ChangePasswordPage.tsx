@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { applyServerErrors, toastSuccess } from '@/lib/forms';
 import { TestIdScope } from '@/lib/testId';
 import { useAuthStore } from '@/stores/auth.store';
@@ -67,8 +68,7 @@ export function ChangePasswordPage() {
               error={errors.currentPassword?.message}
               required
             >
-              <Input
-                type="password"
+              <PasswordInput
                 autoComplete="current-password"
                 {...form.register('currentPassword')}
               />
@@ -79,14 +79,10 @@ export function ChangePasswordPage() {
               hint={t('users.initialPasswordHint')}
               required
             >
-              <Input
-                type="password"
-                autoComplete="new-password"
-                {...form.register('newPassword')}
-              />
+              <PasswordInput autoComplete="new-password" {...form.register('newPassword')} />
             </FormField>
             <FormField label={t('auth.confirmPassword')} error={errors.confirm?.message} required>
-              <Input type="password" autoComplete="new-password" {...form.register('confirm')} />
+              <PasswordInput autoComplete="new-password" {...form.register('confirm')} />
             </FormField>
             <Button
               type="submit"

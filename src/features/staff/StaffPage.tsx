@@ -27,7 +27,7 @@ import {
 import { NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { useHasRole } from '@/components/useHasRole';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { TestIdScope } from '@/lib/testId';
 
@@ -63,6 +63,7 @@ function StaffDialog({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {

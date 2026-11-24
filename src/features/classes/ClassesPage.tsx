@@ -26,7 +26,7 @@ import {
 import { NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { formatNumber } from '@/lib/format';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { useStaff } from '@/features/staff/api';
 import { TestIdScope } from '@/lib/testId';
@@ -66,6 +66,7 @@ function ClassDialog({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {

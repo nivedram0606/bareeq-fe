@@ -20,7 +20,7 @@ import {
 import { NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { todayIso } from '@/lib/format';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 
 import { useCreatePayment } from './api';
 
@@ -55,6 +55,7 @@ export function PaymentForm({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {

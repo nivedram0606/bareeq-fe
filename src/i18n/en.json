@@ -111,7 +111,9 @@
     "crashBody": "This page could not be displayed. Reloading usually fixes it.",
     "reload": "Reload page",
     "clearFilters": "Clear filters",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "validation": {
     "required": "This field is required.",

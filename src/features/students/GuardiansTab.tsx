@@ -24,7 +24,7 @@ import {
 import { Badge, Checkbox } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/misc';
-import { applyServerErrors, toastError } from '@/lib/forms';
+import { applyServerErrors, toastError, useResetOnOpen } from '@/lib/forms';
 import { TestIdScope } from '@/lib/testId';
 
 import { useCreateGuardian, useDeleteGuardian, useGuardians, useUpdateGuardian } from './api';
@@ -58,6 +58,7 @@ function GuardianDialog({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {

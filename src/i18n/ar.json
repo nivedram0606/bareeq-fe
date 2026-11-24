@@ -111,7 +111,9 @@
     "crashBody": "تعذّر عرض هذه الصفحة. عادةً ما تحل إعادة التحميل المشكلة.",
     "reload": "إعادة تحميل الصفحة",
     "clearFilters": "مسح عوامل التصفية",
-    "clearSearch": "مسح البحث"
+    "clearSearch": "مسح البحث",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور"
   },
   "validation": {
     "required": "هذا الحقل مطلوب.",

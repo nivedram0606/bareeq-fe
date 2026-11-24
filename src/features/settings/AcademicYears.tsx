@@ -24,7 +24,7 @@ import { Badge, Checkbox } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
 import { useAcademicYears } from '@/features/classes/api';
 import { formatDate } from '@/lib/format';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 import { TestIdScope } from '@/lib/testId';
 import { useUiStore } from '@/stores/ui.store';
 
@@ -64,6 +64,7 @@ function YearDialog({
     },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
   const startDate = form.watch('startDate');
   const endDate = form.watch('endDate');
 

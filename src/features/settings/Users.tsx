@@ -26,8 +26,9 @@ import {
 } from '@/components/ui/dialog';
 import { Badge, NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { displayName } from '@/lib/displayName';
-import { applyServerErrors } from '@/lib/forms';
+import { applyServerErrors, useResetOnOpen } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { TestIdScope } from '@/lib/testId';
 import { useAuthStore } from '@/stores/auth.store';
@@ -56,6 +57,7 @@ function CreateUserDialog({
     defaultValues: { username: '', fullName: '', email: '', role: 'staff', password: '' },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(open, form.reset);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -110,7 +112,7 @@ function CreateUserDialog({
             hint={t('users.initialPasswordHint')}
             required
           >
-            <Input type="password" autoComplete="new-password" {...form.register('password')} />
+            <PasswordInput autoComplete="new-password" {...form.register('password')} />
           </FormField>
           <DialogFooter>
             <Button
@@ -142,6 +144,7 @@ function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClo
     defaultValues: { password: '' },
   });
   const { errors, isSubmitting } = form.formState;
+  useResetOnOpen(Boolean(user), form.reset);
 
   const close = () => {
     form.reset();
@@ -172,7 +175,7 @@ function ResetPasswordDialog({ user, onClose }: { user: ProfileDto | null; onClo
             hint={t('users.initialPasswordHint')}
             required
           >
-            <Input type="password" autoComplete="new-password" {...form.register('password')} />
+            <PasswordInput autoComplete="new-password" {...form.register('password')} />
           </FormField>
           <DialogFooter>
             <Button variant="outline" onClick={close} data-testid="reset-password-form-cancel">

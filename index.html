@@ -6,6 +6,17 @@
     <title>Bareeq Cloud</title>
     <meta name="description" content="School management: students, fees, payments and reports." />
     <meta name="theme-color" content="#0f766e" />
+    <script>
+      // Paint the school's saved brand colour before the app loads (see src/lib/brand.ts).
+      try {
+        var b = JSON.parse(localStorage.getItem('bareeq.brand') || 'null');
+        if (b && /^#[0-9a-fA-F]{6}$/.test(b.hex) && /^#[0-9a-fA-F]{6}$/.test(b.foreground)) {
+          document.documentElement.style.setProperty('--brand', b.hex);
+          document.documentElement.style.setProperty('--brand-foreground', b.foreground);
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', b.hex);
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/pwa-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
