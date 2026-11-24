@@ -28,7 +28,8 @@
     "language": "Language",
     "userMenu": "User menu",
     "signOut": "Sign out",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "defaultAdminName": "School Administrator"
   },
   "languages": {
     "en": "English",
@@ -137,7 +138,9 @@
     "invalid_phone": "Enter a valid phone number (digits, spaces, + or -).",
     "primary_phone_required": "The primary contact needs a phone number.",
     "inactive_student_class": "Inactive students cannot be assigned to a class.",
-    "inactive_teacher": "Inactive staff cannot be assigned as class teacher."
+    "inactive_teacher": "Inactive staff cannot be assigned as class teacher.",
+    "duplicate_staff_email": "Another staff member already has this e-mail.",
+    "duplicate_staff_phone": "Another staff member already has this phone number."
   },
   "table": {
     "pagination": "Pagination",

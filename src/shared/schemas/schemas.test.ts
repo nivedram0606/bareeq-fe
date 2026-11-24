@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAcademicYearSchema, updateAcademicYearSchema } from './academicYears.js';
 import { listQuerySchema, optionalEmail, optionalText } from './common.js';
+import { createFeeSchema } from './fees.js';
 import { updateOrgSchema } from './org.js';
 import { createUserSchema, loginSchema, updateUserSchema } from './users.js';
 
@@ -94,5 +95,29 @@ describe('academic year schemas', () => {
 
   it('update allows partial input', () => {
     expect(updateAcademicYearSchema.parse({ isCurrent: true })).toEqual({ isCurrent: true });
+  });
+});
+
+describe('fee schemas', () => {
+  const studentId = '00000000-0000-4000-8000-000000000001';
+
+  it('reports every missing field instead of throwing (BUG-0004)', () => {
+    const res = createFeeSchema.safeParse({ studentId, title: '', amount: '', dueDate: '' });
+    expect(res.success).toBe(false);
+    const fields = [...new Set(res.error?.issues.map((i) => i.path.join('.')))].sort();
+    expect(fields).toEqual(['amount', 'dueDate', 'title']);
+  });
+
+  it('still rejects a discount larger than the amount', () => {
+    const res = createFeeSchema.safeParse({
+      studentId,
+      title: 'Tuition',
+      amount: '10',
+      discount: '12',
+      dueDate: '2026-10-01',
+    });
+    expect(res.error?.issues).toMatchObject([
+      { path: ['discount'], message: 'validation.discount_too_large' },
+    ]);
   });
 });

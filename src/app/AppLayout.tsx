@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { schoolName, useOrg } from '@/features/settings/api';
 import { apiAssetUrl } from '@/lib/api';
 import { applyBrandColor } from '@/lib/brand';
+import { displayName } from '@/lib/displayName';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth.store';
 import { useUiStore } from '@/stores/ui.store';
@@ -109,12 +110,14 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={t('header.userMenu')}>
           <UserCircle aria-hidden="true" />
-          <span className="hidden max-w-40 truncate sm:inline">{profile.fullName}</span>
+          <span className="hidden max-w-40 truncate sm:inline">
+            {displayName(profile.fullName, t)}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="truncate">{profile.fullName}</span>
+          <span className="truncate">{displayName(profile.fullName, t)}</span>
           <span className="truncate text-xs font-normal text-muted-foreground" dir="ltr">
             {profile.username}
           </span>

@@ -22,4 +22,8 @@ export function applyBrandColor(hex: string | null | undefined): void {
   const root = document.documentElement.style;
   root.setProperty('--brand', hex);
   root.setProperty('--brand-foreground', foregroundFor(hex));
+  // The browser / installed-app toolbar and the phone status bar use the theme colour too.
+  document
+    .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+    .forEach((meta) => meta.setAttribute('content', hex));
 }

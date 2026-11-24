@@ -23,6 +23,8 @@ export const V = {
   primaryPhoneRequired: 'validation.primary_phone_required',
   inactiveStudentClass: 'validation.inactive_student_class',
   inactiveTeacher: 'validation.inactive_teacher',
+  duplicateStaffEmail: 'validation.duplicate_staff_email',
+  duplicateStaffPhone: 'validation.duplicate_staff_phone',
 } as const;
 
 export const uuidSchema = z.uuid({ error: V.invalidId });

@@ -28,7 +28,8 @@
     "language": "اللغة",
     "userMenu": "قائمة المستخدم",
     "signOut": "تسجيل الخروج",
-    "changePassword": "تغيير كلمة المرور"
+    "changePassword": "تغيير كلمة المرور",
+    "defaultAdminName": "مسؤول المدرسة"
   },
   "languages": {
     "en": "English",
@@ -137,7 +138,9 @@
     "invalid_phone": "أدخل رقم هاتف صحيحًا (أرقام أو مسافات أو + أو -).",
     "primary_phone_required": "يجب أن يكون لجهة الاتصال الرئيسية رقم هاتف.",
     "inactive_student_class": "لا يمكن تعيين الطلاب غير النشطين في صف.",
-    "inactive_teacher": "لا يمكن تعيين موظف غير نشط معلمًا للصف."
+    "inactive_teacher": "لا يمكن تعيين موظف غير نشط معلمًا للصف.",
+    "duplicate_staff_email": "هذا البريد الإلكتروني مسجّل لموظف آخر.",
+    "duplicate_staff_phone": "رقم الهاتف هذا مسجّل لموظف آخر."
   },
   "table": {
     "pagination": "التنقل بين الصفحات",

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge, NativeSelect } from '@/components/ui/form-controls';
 import { Input } from '@/components/ui/input';
+import { displayName } from '@/lib/displayName';
 import { applyServerErrors } from '@/lib/forms';
 import { useUrlFilters } from '@/lib/useUrlFilters';
 import { useAuthStore } from '@/stores/auth.store';
@@ -199,7 +200,7 @@ export function UsersPage() {
         header: t('users.fullName'),
         cell: ({ row }) => (
           <span className="font-medium">
-            {row.original.fullName}
+            {displayName(row.original.fullName, t)}
             {row.original.id === myId ? (
               <span className="ms-2 text-xs text-muted-foreground">({t('users.you')})</span>
             ) : null}

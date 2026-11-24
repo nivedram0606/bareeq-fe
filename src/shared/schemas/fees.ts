@@ -80,8 +80,18 @@ export const studentFeesSchema = z.object({
 });
 export type StudentFeesDto = z.infer<typeof studentFeesSchema>;
 
-const discountWithinAmount = (v: { amount?: string; discount?: string }) =>
-  v.amount === undefined || v.discount === undefined || toBaisa(v.discount) <= toBaisa(v.amount);
+/**
+ * Zod still runs this check when a field failed its own validation (e.g. an empty amount), so it
+ * only compares two valid money values and leaves the error on the field itself otherwise.
+ */
+const discountWithinAmount = (v: { amount?: unknown; discount?: unknown }) => {
+  if (typeof v.amount !== 'string' || typeof v.discount !== 'string') return true;
+  try {
+    return toBaisa(v.discount) <= toBaisa(v.amount);
+  } catch {
+    return true;
+  }
+};
 
 const feeFields = z.object({
   title: requiredText(150),
