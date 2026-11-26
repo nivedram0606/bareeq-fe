@@ -63,3 +63,12 @@ This frontend can be deployed directly to Netlify, Vercel, Cloudflare Pages, or 
 - **Build command**: `pnpm build` (or `npm run build`)
 - **Publish directory**: `dist`
 - Configured with SPA fallback via `netlify.toml` and `public/_redirects`.
+
+#### Vercel
+
+[`vercel.json`](vercel.json) holds the Vercel setup: pnpm install and build, `dist` output, the SPA fallback to `index.html` (except `/assets/*`, so a missing chunk is a 404) and the same security and cache headers as `public/_headers`.
+
+1. In Vercel, **Add New → Project** and import this repository. The settings come from `vercel.json`, so leave the build settings on their defaults.
+2. Under **Settings → Environment Variables**, set `VITE_API_URL` to the API base, e.g. `https://bareeq-be.onrender.com/api/v1`. It is baked in at build time, so redeploy after changing it.
+3. Set **Settings → Build and Deployment → Node.js Version** to 22.x (as Netlify uses).
+4. On the backend, add the Vercel domain to `CORS_ORIGIN` (comma-separated, e.g. `https://bareeq-crm.netlify.app,https://<project>.vercel.app`), or the browser blocks API calls.
